@@ -1,0 +1,17 @@
+@model Cms.Studio.Core.Services.PagedInfo
+
+@* Generic pager: keeps ?page=N links simple for crawlers. *@
+@if (Model.TotalPages > 1)
+{
+    <nav class="pager" aria-label="Pagination">
+        @if (Model.HasPrevious)
+        {
+            <a class="pager-link" href="?page=@(Model.Page - 1)">« Newer</a>
+        }
+        <span class="pager-current">Page @Model.Page of @Model.TotalPages</span>
+        @if (Model.HasNext)
+        {
+            <a class="pager-link" href="?page=@(Model.Page + 1)">Older »</a>
+        }
+    </nav>
+}

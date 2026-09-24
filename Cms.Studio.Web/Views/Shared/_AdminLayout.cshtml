@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " — " : "")Cms.Studio Admin</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body class="admin-body">
+    <header class="admin-header">
+        <div class="header-inner">
+            <a class="site-brand" href="/">Cms.Studio</a>
+            <nav class="site-nav">
+                <a href="/admin/dashboard">Dashboard</a>
+                <a href="/admin/posts">Posts</a>
+                <a href="/admin/comments">Comments</a>
+                <a href="/admin/catalog/categories">Categories</a>
+                <a href="/admin/catalog/series">Series</a>
+                <a href="/admin/catalog/tags">Tags</a>
+                <a href="/admin/settings">Settings</a>
+                <a href="/" target="_blank">View site</a>
+                <a href="/admin/logout">Sign out</a>
+            </nav>
+        </div>
+    </header>
+    <main class="admin-main">
+        @RenderBody()
+    </main>
+</body>
+</html>

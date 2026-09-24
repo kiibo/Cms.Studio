@@ -1,0 +1,66 @@
+@using Cms.Studio.Core.Domain
+@model SidebarViewModel
+
+<div class="side-card">
+    <h3 class="side-title">Rankings</h3>
+    <div class="rank-tabs">
+        <a href="/rank/daily">Daily Top</a>
+        <a href="/rank/weekly">Weekly Top</a>
+        <a href="/rank/monthly">Monthly Top</a>
+    </div>
+    <ol class="rank-list">
+        @{ var i = 1; }
+        @foreach (var item in Model.Daily)
+        {
+            <li>
+                <span class="rank-no">@i</span>
+                <a href="/blog/@item.Post.Slug">@item.Post.Title</a>
+                <span class="rank-views">@item.Views views</span>
+            </li>
+            i++;
+        }
+        @if (Model.Daily.Count == 0)
+        {
+            <li class="muted">No views yet today.</li>
+        }
+    </ol>
+</div>
+
+@if (Model.Categories.Count > 0)
+{
+    <div class="side-card">
+        <h3 class="side-title">Categories</h3>
+        <ul class="side-list">
+            @foreach (var category in Model.Categories)
+            {
+                <li><a href="/category/@category.Slug">@category.Name</a></li>
+            }
+        </ul>
+    </div>
+}
+
+@if (Model.Series.Count > 0)
+{
+    <div class="side-card">
+        <h3 class="side-title">Series</h3>
+        <ul class="side-list">
+            @foreach (var series in Model.Series)
+            {
+                <li><a href="/series/@series.Slug">@series.Title</a></li>
+            }
+        </ul>
+    </div>
+}
+
+@if (Model.TopTags.Count > 0)
+{
+    <div class="side-card">
+        <h3 class="side-title">Tags</h3>
+        <div class="tag-cloud">
+            @foreach (var tag in Model.TopTags)
+            {
+                <a href="/tag/@tag.Tag.Slug">@tag.Tag.Name <span class="muted">(@tag.Count)</span></a>
+            }
+        </div>
+    </div>
+}

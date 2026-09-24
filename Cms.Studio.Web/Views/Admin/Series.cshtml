@@ -1,0 +1,62 @@
+@using Cms.Studio.Core.Domain
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Series";
+    var seriesList = (List<Series>)ViewBag.Series;
+}
+
+<div class="admin-head">
+    <h1>Series</h1>
+</div>
+
+<div class="edit-grid">
+    <div class="admin-card">
+        <h2>Add / edit series</h2>
+        <form method="post" action="/admin/catalog/series/save">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="0" />
+            <label>Title *
+                <input type="text" name="Title" required />
+            </label>
+            <label>Description
+                <textarea name="Description" rows="2"></textarea>
+            </label>
+            <label>Slug (leave empty to generate from the title)
+                <input type="text" name="Slug" />
+            </label>
+            <label>Cover image URL
+                <input type="text" name="CoverImageUrl" />
+            </label>
+            <label>Display order
+                <input type="number" name="DisplayOrder" value="0" />
+            </label>
+            <button type="submit" class="btn">Save</button>
+        </form>
+    </div>
+
+    <div class="admin-card">
+        <h2>All series (@seriesList.Count)</h2>
+        <table class="admin-table">
+            <thead>
+                <tr><th>Title</th><th>Slug</th><th>Order</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var series in seriesList)
+                {
+                    <tr>
+                        <td>@series.Title</td>
+                        <td>@series.Slug</td>
+                        <td>@series.DisplayOrder</td>
+                        <td class="actions">
+                            <form method="post" action="/admin/catalog/series/delete/@series.Id" class="inline"
+                                  onsubmit="return confirm('Delete this series?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="link-btn">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

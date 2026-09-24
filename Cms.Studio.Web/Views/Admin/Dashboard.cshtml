@@ -1,0 +1,63 @@
+@model AdminDashboardViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Dashboard";
+
+    var maxViews = Model.Trend.Count == 0 ? 0 : Model.Trend.Max(t => t.Views);
+}
+
+<h1>Dashboard</h1>
+
+<div class="stat-row">
+    <div class="stat-card"><span class="stat-num">@Model.Stats.TotalPosts</span><span class="stat-label">Posts</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.PublishedPosts</span><span class="stat-label">Published</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.DraftPosts</span><span class="stat-label">Drafts</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.TotalViews</span><span class="stat-label">Total views</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.TotalCategories</span><span class="stat-label">Categories</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.TotalSeries</span><span class="stat-label">Series</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.TotalTags</span><span class="stat-label">Tags</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.TotalComments</span><span class="stat-label">Comments</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Stats.PendingComments</span><span class="stat-label">Pending comments</span></div>
+</div>
+
+<div class="admin-card">
+    <h2>Views — last 30 days</h2>
+    <div class="trend">
+        @foreach (var day in Model.Trend)
+        {
+            var height = maxViews > 0 ? day.Views * 100 / maxViews : 0;
+            <div class="trend-col" title="@day.Day.ToString("MM-dd"): @day.Views">
+                <div class="trend-bar" style="height: @(height)%;"></div>
+                <span class="trend-day">@day.Day.ToString("dd")</span>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="admin-card">
+    <h2>Top posts this month (Monthly Top 10)</h2>
+    @if (Model.TopPosts.Count == 0)
+    {
+        <p class="muted">No view data yet.</p>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr><th>#</th><th>Title</th><th>Views</th></tr>
+            </thead>
+            <tbody>
+                @{ var no = 1; }
+                @foreach (var item in Model.TopPosts)
+                {
+                    <tr>
+                        <td>@no</td>
+                        <td><a href="/blog/@item.Post.Slug" target="_blank">@item.Post.Title</a></td>
+                        <td>@item.Views</td>
+                    </tr>
+                    no++;
+                }
+            </tbody>
+        </table>
+    }
+</div>

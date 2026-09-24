@@ -1,0 +1,35 @@
+@using Cms.Studio.Core.Domain
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Tags";
+    var tags = (List<Tag>)ViewBag.Tags;
+}
+
+<div class="admin-head">
+    <h1>Tags</h1>
+</div>
+
+<div class="admin-card">
+    <p class="muted">Tags are created automatically when saving a post (comma separated in the "Tags" field of the post editor).</p>
+    <table class="admin-table">
+        <thead>
+            <tr><th>Name</th><th>Slug</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var tag in tags)
+            {
+                <tr>
+                    <td>@tag.Name</td>
+                    <td>@tag.Slug</td>
+                    <td class="actions">
+                        <form method="post" action="/admin/catalog/tags/delete/@tag.Id" class="inline"
+                              onsubmit="return confirm('Delete this tag?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="link-btn">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

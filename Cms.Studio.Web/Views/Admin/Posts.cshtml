@@ -1,0 +1,60 @@
+@using Cms.Studio.Core.Domain
+@using Cms.Studio.Core.Services
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Posts";
+    var posts = (PagedResult<Post>)ViewBag.Posts;
+}
+
+<div class="admin-head">
+    <h1>Posts</h1>
+    <a class="btn" href="/admin/posts/edit">New post</a>
+</div>
+
+<form class="filter-form" method="get" action="/admin/posts">
+    <input type="text" name="keyword" value="@ViewBag.Keyword" placeholder="Search by title" />
+    <select name="status">
+        <option value="">All statuses</option>
+        <option value="0" selected="@((ViewBag.Status as PostStatus?) == PostStatus.Draft ? "selected" : null)">Draft</option>
+        <option value="1" selected="@((ViewBag.Status as PostStatus?) == PostStatus.Published ? "selected" : null)">Published</option>
+    </select>
+    <button type="submit" class="btn">Search</button>
+</form>
+
+<div class="admin-card">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Pinned</th>
+                <th>Views</th>
+                <th>Published on</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var post in posts.Items)
+            {
+                <tr>
+                    <td><a href="/blog/@post.Slug" target="_blank">@post.Title</a></td>
+                    <td>@post.Category?.Name</td>
+                    <td>@(post.Status == PostStatus.Published ? "Published" : "Draft")</td>
+                    <td>@(post.IsFixedTop ? "Yes" : "")</td>
+                    <td>@post.ViewCount</td>
+                    <td>@Ui.Date(post.PublishedOnUtc ?? post.CreatedOnUtc)</td>
+                    <td class="actions">
+                        <a href="/admin/posts/edit/@post.Id">Edit</a>
+                        <form method="post" action="/admin/posts/delete/@post.Id" class="inline"
+                              onsubmit="return confirm('Delete this post?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="link-btn">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="_Paging" model="posts" />
+</div>

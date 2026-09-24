@@ -1,0 +1,15 @@
+@model ListViewModel
+
+<section class="feed">
+    <h1 class="section-heading">Archive</h1>
+    <p class="section-desc">All posts by month.</p>
+    <ul class="archive-list">
+        @foreach (var month in (List<Cms.Studio.Core.Services.ArchiveMonth>)ViewBag.Months)
+        {
+            <li>
+                <a href="/archive/@month.Year/@month.Month">@(new DateTime(month.Year, month.Month, 1).ToString("MMMM yyyy"))</a>
+                <span class="muted">(@month.Count)</span>
+            </li>
+        }
+    </ul>
+</section>

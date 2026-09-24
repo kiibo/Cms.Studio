@@ -1,0 +1,83 @@
+@using Cms.Studio.Core.Domain
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Comments";
+    var comments = (List<Comment>)ViewBag.Comments;
+    var postTitles = (Dictionary<int, string>)ViewBag.PostTitles;
+    var filter = (string)ViewBag.Filter;
+}
+
+<div class="admin-head">
+    <h1>Comments <span class="muted">(@ViewBag.PendingCount pending)</span></h1>
+    <div class="filter-form">
+        <a class="btn @(filter == "pending" ? "" : "secondary")" href="/admin/comments?filter=pending">Pending</a>
+        <a class="btn @(filter == "all" ? "" : "secondary")" href="/admin/comments?filter=all">All</a>
+    </div>
+</div>
+
+<div class="admin-card">
+    @if (comments.Count == 0)
+    {
+        <p class="muted">@(filter == "pending" ? "No comments awaiting moderation." : "No comments yet.")</p>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Post</th>
+                    <th>Nick name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var comment in comments)
+                {
+                    <tr>
+                        <td>
+                            <span title="Post id @comment.PostId">@postTitles[comment.PostId]</span>
+                        </td>
+                        <td>@comment.NickName</td>
+                        <td>@comment.Email</td>
+                        <td class="comment-cell">
+                            @if (comment.ParentId != null)
+                            {
+                                <span class="muted">(reply) </span>
+                            }
+                            @(comment.Content.Length > 120 ? comment.Content[..120] + "…" : comment.Content)
+                        </td>
+                        <td>@Ui.DateTimeShort(comment.CreatedOnUtc)</td>
+                        <td>
+                            @if (comment.IsApproved)
+                            {
+                                <span class="success">Approved</span>
+                            }
+                            else
+                            {
+                                <span class="error">Pending</span>
+                            }
+                        </td>
+                        <td class="actions">
+                            @if (!comment.IsApproved)
+                            {
+                                <form method="post" action="/admin/comments/approve/@comment.Id" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="link-btn">Approve</button>
+                                </form>
+                            }
+                            <form method="post" action="/admin/comments/delete/@comment.Id" class="inline"
+                                  onsubmit="return confirm('Delete this comment?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="link-btn">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

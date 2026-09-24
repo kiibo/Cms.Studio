@@ -1,0 +1,23 @@
+@using Cms.Studio.Core.Domain
+@model Post
+
+<article class="feed-item">
+    <h2 class="feed-title">
+        @if (Model.IsFixedTop)
+        {
+            <span class="badge-top">Top</span>
+        }
+        <a href="/blog/@Model.Slug">@Model.Title</a>
+    </h2>
+    <p class="feed-summary">@Model.Summary</p>
+    <div class="feed-meta">
+        <span class="feed-tags">
+            Tags:
+            @foreach (var pt in Model.PostTags)
+            {
+                <a href="/tag/@pt.Tag.Slug">@pt.Tag.Name</a>@(pt != Model.PostTags.Last() ? ", " : "")
+            }
+        </span>
+        <time datetime="@Ui.Iso(Model.PublishedOnUtc ?? Model.CreatedOnUtc)">@Ui.Date(Model.PublishedOnUtc ?? Model.CreatedOnUtc)</time>
+    </div>
+</article>

@@ -1,0 +1,40 @@
+@model RankViewModel
+
+<section class="feed">
+    <h1 class="section-heading">
+        @(Model.Period == Cms.Studio.Core.Domain.RankPeriod.Daily ? "Daily Top" : Model.Period == Cms.Studio.Core.Domain.RankPeriod.Weekly ? "Weekly Top" : "Monthly Top")
+    </h1>
+    <div class="rank-tabs big">
+        <a class="@(Model.Period == Cms.Studio.Core.Domain.RankPeriod.Daily ? "active" : "")" href="/rank/daily">Daily Top</a>
+        <a class="@(Model.Period == Cms.Studio.Core.Domain.RankPeriod.Weekly ? "active" : "")" href="/rank/weekly">Weekly Top</a>
+        <a class="@(Model.Period == Cms.Studio.Core.Domain.RankPeriod.Monthly ? "active" : "")" href="/rank/monthly">Monthly Top</a>
+    </div>
+
+    @if (Model.Items.Count == 0)
+    {
+        <p class="muted">No views recorded for this period yet.</p>
+    }
+    else
+    {
+        <ol class="rank-page-list">
+            @{ var no = 1; }
+            @foreach (var item in Model.Items)
+            {
+                <li>
+                    <span class="rank-no">@no</span>
+                    <div class="rank-body">
+                        <a class="rank-title" href="/blog/@item.Post.Slug">@item.Post.Title</a>
+                        <div class="rank-meta">
+                            <a href="/category/@item.Post.Category.Slug">@item.Post.Category.Name</a>
+                            <span class="dot">·</span>
+                            <time datetime="@Ui.Iso(item.Post.PublishedOnUtc)">@Ui.Date(item.Post.PublishedOnUtc)</time>
+                            <span class="dot">·</span>
+                            <span>@item.Views views</span>
+                        </div>
+                    </div>
+                </li>
+                no++;
+            }
+        </ol>
+    }
+</section>

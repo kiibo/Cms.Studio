@@ -1,0 +1,125 @@
+@model PostViewModel
+
+<article class="post">
+    <header class="post-header">
+        <h1 class="post-title">@Model.Post.Title</h1>
+        <div class="post-meta">
+            <time datetime="@Ui.Iso(Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc)">@Ui.DateTimeShort(Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc)</time>
+            <span class="dot">·</span>
+            <a href="/category/@Model.Post.Category.Slug">@Model.Post.Category.Name</a>
+            <span class="dot">·</span>
+            <span>@(string.IsNullOrWhiteSpace(Model.Post.AuthorName) ? "Admin" : Model.Post.AuthorName)</span>
+            <span class="dot">·</span>
+            <span>@Model.Post.ViewCount views</span>
+            <span class="dot">·</span>
+            <a class="md-link" href="/blog/@(Model.Post.Slug).md">Markdown</a>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrEmpty(Model.Post.CoverImageUrl))
+    {
+        <img class="post-cover" src="@Model.Post.CoverImageUrl" alt="@Model.Post.Title" />
+    }
+
+    <div class="post-body">
+        @Html.Raw(Model.HtmlContent)
+    </div>
+
+    @if (Model.Post.PostTags.Count > 0)
+    {
+        <div class="post-tags">
+            Tags:
+            @foreach (var pt in Model.Post.PostTags)
+            {
+                <a href="/tag/@pt.Tag.Slug">@pt.Tag.Name</a>
+            }
+        </div>
+    }
+</article>
+
+<section class="comments" id="comments">
+    <h2 class="section-heading">Comments (@Model.CommentCount)</h2>
+
+    @if (Model.Comments.Count == 0)
+    {
+        <p class="muted">No comments yet. Be the first to comment!</p>
+    }
+    else
+    {
+        foreach (var node in Model.Comments)
+        {
+            <div class="comment">
+                <div class="comment-meta">
+                    <strong>@node.Comment.NickName</strong>
+                    <time datetime="@Ui.Iso(node.Comment.CreatedOnUtc)">@Ui.DateTimeShort(node.Comment.CreatedOnUtc)</time>
+                    <a class="comment-reply" href="/blog/@Model.Post.Slug?replyTo=@node.Comment.Id#comment-form">Reply</a>
+                </div>
+                <div class="comment-content">@node.Comment.Content</div>
+            </div>
+            @foreach (var reply in node.Replies)
+            {
+                <div class="comment comment-reply-item">
+                    <div class="comment-meta">
+                        <strong>@reply.Comment.NickName</strong>
+                        <time datetime="@Ui.Iso(reply.Comment.CreatedOnUtc)">@Ui.DateTimeShort(reply.Comment.CreatedOnUtc)</time>
+                        <span class="muted">→ @node.Comment.NickName</span>
+                    </div>
+                    <div class="comment-content">@reply.Comment.Content</div>
+                </div>
+            }
+        }
+    }
+
+    <div class="comment-form-wrap" id="comment-form">
+        <h3>Leave a comment</h3>
+        <p class="muted">Comments are moderated. Your email is used only for verification and is never published.</p>
+
+        @if (!string.IsNullOrEmpty(Model.CommentNotice))
+        {
+            <p class="notice">@Model.CommentNotice</p>
+        }
+        @if (Model.ReplyingTo != null)
+        {
+            <p class="notice">Replying to <strong>@Model.ReplyingTo.NickName</strong> — <a href="/blog/@Model.Post.Slug#comments">cancel</a></p>
+        }
+        <div asp-validation-summary="All"></div>
+
+        <form method="post" action="/blog/@Model.Post.Slug/comment">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ParentId" value="@(Model.CommentForm.ParentId ?? (object)string.Empty)" />
+            <div class="comment-form-row">
+                <label>Nick name * (2–50 chars)
+                    <input type="text" name="NickName" value="@Model.CommentForm.NickName" maxlength="50" required />
+                </label>
+                <label>Email * (for the verification code, never published)
+                    <input type="email" name="Email" value="@Model.CommentForm.Email" maxlength="100" required />
+                </label>
+            </div>
+            <label>Comment *
+                <textarea name="Content" rows="5" maxlength="2000" required>@Model.CommentForm.Content</textarea>
+            </label>
+            <div class="comment-form-row">
+                <label>Verification code *
+                    <input type="text" name="Code" value="@Model.CommentForm.Code" maxlength="6" placeholder="6-digit code from your email" required />
+                </label>
+                <div class="code-actions">
+                    <button type="submit" name="action" value="send-code" class="btn secondary">Send code</button>
+                    <button type="submit" name="action" value="post" class="btn">Post comment</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@if (Model.Related.Count > 0)
+{
+    <section class="related">
+        <h2 class="section-heading">Related</h2>
+        <ul class="related-list">
+            @foreach (var post in Model.Related)
+            {
+                <li><a href="/blog/@post.Slug">@post.Title</a> <span class="muted">@Ui.Date(post.PublishedOnUtc)</span></li>
+            }
+        </ul>
+    </section>
+}

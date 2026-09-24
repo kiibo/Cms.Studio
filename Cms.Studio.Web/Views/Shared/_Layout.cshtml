@@ -1,0 +1,87 @@
+@{
+    var siteTitle = ViewData["Title"] as string ?? "Cms.Studio";
+    var metaDescription = ViewData["MetaDescription"] as string ?? "";
+    var canonicalUrl = ViewData["CanonicalUrl"] as string ?? "/";
+    var ogImage = ViewData["OgImage"] as string;
+    var jsonLd = ViewData["JsonLd"] as string;
+    var isHome = Context.Request.Path.Value == "/";
+    var q = Context.Request.Query["q"].ToString();
+    var navCategories = await CategoryNavService.GetAllAsync(showHidden: false);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} — Cms.Studio" : "Cms.Studio")</title>
+    @if (!string.IsNullOrEmpty(metaDescription))
+    {
+        <meta name="description" content="@metaDescription" />
+    }
+    <link rel="canonical" href="@canonicalUrl" />
+    <meta property="og:type" content="@(ViewData["OgType"] as string ?? "website")" />
+    <meta property="og:title" content="@siteTitle" />
+    @if (!string.IsNullOrEmpty(metaDescription))
+    {
+        <meta property="og:description" content="@metaDescription" />
+    }
+    <meta property="og:url" content="@canonicalUrl" />
+    @if (!string.IsNullOrEmpty(ogImage))
+    {
+        <meta property="og:image" content="@ogImage" />
+    }
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss" />
+    <link rel="alternate" type="text/markdown" title="llms.txt" href="/llms.txt" />
+    <link rel="stylesheet" href="/css/site.css" />
+    @if (!string.IsNullOrEmpty(jsonLd))
+    {
+        <script type="application/ld+json">@Html.Raw(jsonLd)</script>
+    }
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="site-brand" href="/">Cms.Studio</a>
+            <nav class="site-nav" aria-label="Main">
+                <a href="/">Home</a>
+                @foreach (var category in navCategories)
+                {
+                    <a href="/category/@category.Slug">@category.Name</a>
+                }
+                <span class="nav-rank-group">
+                    <a class="nav-rank" href="/rank/daily">Daily Top</a>
+                    <a class="nav-rank" href="/rank/weekly">Weekly Top</a>
+                    <a class="nav-rank" href="/rank/monthly">Monthly Top</a>
+                </span>
+            </nav>
+            <form class="search-form" action="/search" method="get" role="search">
+                <input type="search" name="q" value="@q" placeholder="Search..." aria-label="Search" />
+            </form>
+        </div>
+    </header>
+
+    <div class="page @(isHome ? "page-home" : "")">
+        <main class="main-col">
+            @RenderBody()
+        </main>
+        <aside class="side-col">
+            @await Component.InvokeAsync("Sidebar")
+        </aside>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p>© @DateTime.UtcNow.Year Cms.Studio — written for humans and machines.</p>
+            <p class="footer-links">
+                <a href="/rss">RSS</a>
+                <a href="/sitemap.xml">Sitemap</a>
+                <a href="/llms.txt">llms.txt</a>
+                <a href="/llms-full.txt">llms-full.txt</a>
+                <a href="/admin">Admin</a>
+            </p>
+        </div>
+    </footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

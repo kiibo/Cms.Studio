@@ -1,0 +1,23 @@
+@model LoginViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="admin-card narrow">
+    <h1>Sign in to the admin area</h1>
+    @if (Model.Error != null)
+    {
+        <p class="error">@Model.Error</p>
+    }
+    <form method="post" action="/admin/login">
+        @Html.AntiForgeryToken()
+        <label>Username
+            <input type="text" name="Username" value="@Model.Username" autofocus />
+        </label>
+        <label>Password
+            <input type="password" name="Password" />
+        </label>
+        <button type="submit" class="btn">Sign in</button>
+    </form>
+</div>

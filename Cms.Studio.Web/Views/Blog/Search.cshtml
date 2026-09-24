@@ -1,0 +1,16 @@
+@model ListViewModel
+
+<section class="feed">
+    <h1 class="section-heading">@Model.Title</h1>
+    <p class="section-desc">@Model.Description</p>
+
+    @if (Model.Posts.Items.Count == 0)
+    {
+        <p class="muted">No results for “@Context.Request.Query["q"]”.</p>
+    }
+    @foreach (var post in Model.Posts.Items)
+    {
+        <partial name="_PostCard" model="post" />
+    }
+    <partial name="_Paging" model="Model.Posts" />
+</section>

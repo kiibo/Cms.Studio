@@ -1,0 +1,14 @@
+@model ListViewModel
+
+<section class="feed">
+    <h1 class="section-heading">Latest</h1>
+    @if (Model.Posts.Items.Count == 0)
+    {
+        <p class="muted">Nothing here yet. Write your first post in the <a href="/admin">admin area</a>.</p>
+    }
+    @foreach (var post in Model.Posts.Items)
+    {
+        <partial name="_PostCard" model="post" />
+    }
+    <partial name="_Paging" model="Model.Posts" />
+</section>

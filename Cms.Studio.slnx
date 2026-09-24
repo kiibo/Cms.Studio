@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Cms.Studio.Core/Cms.Studio.Core.csproj" />
+  <Project Path="Cms.Studio.Web/Cms.Studio.Web.csproj" />
+</Solution>

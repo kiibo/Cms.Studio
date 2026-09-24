@@ -1,0 +1,95 @@
+@model AdminPostEditViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = Model.Post.Id > 0 ? "Edit post" : "New post";
+    var isNew = Model.Post.Id == 0;
+}
+
+<div class="admin-head">
+    <h1>@(isNew ? "New post" : $"Edit post: {Model.Post.Title}")</h1>
+    <div>
+        @if (!isNew)
+        {
+            <a class="btn secondary" href="/blog/@(Model.Post.Slug)" target="_blank">View post</a>
+            <a class="btn secondary" href="/blog/@(Model.Post.Slug).md" target="_blank">View Markdown</a>
+        }
+        <a class="btn secondary" href="/admin/posts">Back to list</a>
+    </div>
+</div>
+
+<form method="post" action="/admin/posts/edit/@(isNew ? "" : Model.Post.Id.ToString())">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All"></div>
+
+    <div class="edit-grid">
+        <div class="admin-card">
+            <h2>Content</h2>
+            <label>Title *
+                <input type="text" name="Post.Title" value="@Model.Post.Title" required />
+            </label>
+            <label>Summary (used in listings and as the default meta description)
+                <textarea name="Post.Summary" rows="3">@Model.Post.Summary</textarea>
+            </label>
+            <label>Body (Markdown) *
+                <textarea name="Post.ContentMd" rows="24" class="mono">@Model.Post.ContentMd</textarea>
+            </label>
+        </div>
+
+        <div class="admin-card">
+            <h2>Publishing</h2>
+            <label>Slug (leave empty to generate from the title)
+                <input type="text" name="Post.Slug" value="@Model.Post.Slug" placeholder="my-post-slug" />
+            </label>
+            <label>Category *
+                <select name="Post.CategoryId">
+                    <option value="0">— Select —</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.Id" selected="@(Model.Post.CategoryId == category.Id ? "selected" : null)">@category.Name</option>
+                    }
+                </select>
+            </label>
+            <label>Tags (comma separated)
+                <input type="text" name="TagsInput" value="@Model.TagsInput" placeholder="ai, seo, dotnet" />
+            </label>
+            <label>Series (multi-select)
+                <select name="SelectedSeriesIds" multiple size="5">
+                    @foreach (var series in Model.AllSeries)
+                    {
+                        <option value="@series.Id" selected="@(Model.SelectedSeriesIds.Contains(series.Id) ? "selected" : null)">@series.Title</option>
+                    }
+                </select>
+            </label>
+            <label>Author
+                <input type="text" name="Post.AuthorName" value="@Model.Post.AuthorName" />
+            </label>
+            <label>Cover image URL
+                <input type="text" name="Post.CoverImageUrl" value="@Model.Post.CoverImageUrl" />
+            </label>
+            <label>Status
+                <select name="Post.Status">
+                    <option value="0" selected="@(Model.Post.Status == PostStatus.Draft ? "selected" : null)">Draft</option>
+                    <option value="1" selected="@(Model.Post.Status == PostStatus.Published ? "selected" : null)">Published</option>
+                </select>
+            </label>
+            <label class="check">
+                <input type="checkbox" name="Post.IsFixedTop" value="true" checked="@(Model.Post.IsFixedTop ? "checked" : null)" />
+                Pin to top (shown first on the home feed and in rankings)
+            </label>
+            <label>Publish date (UTC — leave empty to use the current time on publish)
+                <input type="datetime-local" name="Post.PublishedOnUtc"
+                       value="@(Model.Post.PublishedOnUtc?.ToString("yyyy-MM-ddTHH:mm"))" />
+            </label>
+
+            <h2>SEO</h2>
+            <label>Meta title (leave empty to use the post title)
+                <input type="text" name="Post.MetaTitle" value="@Model.Post.MetaTitle" />
+            </label>
+            <label>Meta description (leave empty to use the summary)
+                <textarea name="Post.MetaDescription" rows="2">@Model.Post.MetaDescription</textarea>
+            </label>
+
+            <button type="submit" class="btn">Save</button>
+        </div>
+    </div>
+</form>
