@@ -105,103 +105,138 @@
     </div>
 </form>
 
-<link rel="stylesheet" href="/vendor/vditor/dist/index.css" />
-<script src="/vendor/vditor/dist/index.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.8.15/dist/index.css" 
+      crossorigin="anonymous" />
+<script src="https://cdn.jsdelivr.net/npm/vditor@3.8.15" 
+        crossorigin="anonymous"></script>
 <script>
 (function () {
-    const mdField = document.getElementById('content-md');
-    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-    const csrfToken = tokenInput ? tokenInput.value : '';
+    // Check if Vditor is loaded
+    let attempts = 0;
+    const maxAttempts = 100; // 10 seconds max
 
-    const initialContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Post.ContentMd ?? string.Empty));
-
-    const vditor = new Vditor('vditor-editor', {
-        cdn: '/vendor/vditor',
-        lang: 'en_US',
-        mode: 'ir',
-        height: Math.max(560, window.innerHeight - 300),
-        cache: { enable: false },
-        after: function () {
-            vditor.setValue(initialContent);
-        },
-        counter: { enable: true, type: 'markdown' },
-        resize: { enable: true },
-        toolbarConfig: { pin: true },
-        toolbar: [
-            'headings', 'bold', 'italic', 'strike', 'link', '|',
-            'list', 'ordered-list', 'check', '|',
-            'quote', 'code', 'inline-code', 'table', '|',
-            'upload', '|',
-            'undo', 'redo', '|',
-            'edit-mode', 'preview', 'outline', 'fullscreen'
-        ],
-        preview: {
-            markdown: { toc: true },
-            hljs: { enable: true, style: 'github' }
-        },
-        upload: {
-            url: '/admin/upload/image',
-            fieldName: 'file',
-            accept: 'image/*',
-            max: 10 * 1024 * 1024,
-            headers: { 'X-XSRF-TOKEN': csrfToken },
-            format: function (files, responseText) {
-                // Map our { url } response to Vditor's { code, data.fileUrls } shape.
-                try {
-                    const resp = JSON.parse(responseText);
-                    return JSON.stringify({ msg: '', code: 0, data: { fileUrls: [resp.url] } });
-                } catch (e) {
-                    return JSON.stringify({ msg: 'Upload failed', code: 1, data: { fileUrls: [] } });
-                }
+    function tryInit() {
+        if (typeof Vditor === 'undefined') {
+            attempts++;
+            if (attempts < maxAttempts) {
+                setTimeout(tryInit, 100);
+                return;
             }
+            console.error('Vditor failed to load from CDN');
+            return;
         }
-    });
 
-    // Keep the hidden Markdown field in sync before the form is posted.
-    const form = document.querySelector('form.post-edit-form');
-    form.addEventListener('submit', function () {
-        mdField.value = vditor.getValue();
-    });
+        initEditor();
+    }
 
-    // ---------- cover image upload / remove (nopCommerce-style picture widget) ----------
+    function initEditor() {
+        const mdField = document.getElementById('content-md');
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const csrfToken = tokenInput ? tokenInput.value : '';
+
+        const initialContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Post.ContentMd ?? string.Empty));
+
+        try {
+            const vditor = new Vditor('vditor-editor', {
+                lang: 'en_US',
+                mode: 'ir',
+                height: Math.max(560, window.innerHeight - 300),
+                cache: { enable: false },
+                after: function () {
+                    vditor.setValue(initialContent);
+                },
+                counter: { enable: true, type: 'markdown' },
+                resize: { enable: true },
+                toolbarConfig: { pin: true },
+                toolbar: [
+                    'headings', 'bold', 'italic', 'strike', 'link', '|',
+                    'list', 'ordered-list', 'check', '|',
+                    'quote', 'code', 'inline-code', 'table', '|',
+                    'upload', '|',
+                    'undo', 'redo', '|',
+                    'edit-mode', 'preview', 'outline', 'fullscreen'
+                ],
+                preview: {
+                    markdown: { toc: true },
+                    hljs: { enable: true, style: 'github' }
+                },
+                upload: {
+                    url: '/admin/upload/image',
+                    fieldName: 'file',
+                    accept: 'image/*',
+                    max: 10 * 1024 * 1024,
+                    headers: { 'X-XSRF-TOKEN': csrfToken },
+                    format: function (files, responseText) {
+                        try {
+                            const resp = JSON.parse(responseText);
+                            return JSON.stringify({ msg: '', code: 0, data: { fileUrls: [resp.url] } });
+                        } catch (e) {
+                            return JSON.stringify({ msg: 'Upload failed', code: 1, data: { fileUrls: [] } });
+                        }
+                    }
+                }
+            });
+
+            // Sync to hidden field on form submit
+            const form = document.querySelector('form.post-edit-form');
+            form.addEventListener('submit', function () {
+                mdField.value = vditor.getValue();
+            });
+        } catch (error) {
+            console.error('Failed to initialize Vditor:', error);
+        }
+    }
+
+    // Start initialization
+    tryInit();
+
+    // Cover image upload handling
     const coverUrl = document.getElementById('cover-url');
     const coverFile = document.getElementById('cover-file');
     const coverPreviewBox = document.getElementById('cover-preview-box');
     const coverPreview = document.getElementById('cover-preview');
     const coverStatus = document.getElementById('cover-status');
+    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+    const csrfToken = tokenInput ? tokenInput.value : '';
 
-    coverFile.addEventListener('change', async function () {
-        const file = coverFile.files[0];
-        if (!file) return;
-        coverStatus.textContent = 'Uploading…';
-        const body = new FormData();
-        body.append('file', file);
-        try {
-            const resp = await fetch('/admin/upload/image', {
-                method: 'POST',
-                body: body,
-                headers: { 'X-XSRF-TOKEN': csrfToken }
-            });
-            const data = await resp.json().catch(function () { return {}; });
-            if (resp.ok && data.url) {
-                coverUrl.value = data.url;
-                coverPreview.src = data.url;
-                coverPreviewBox.style.display = '';
-                coverStatus.textContent = 'Uploaded: ' + data.url;
-            } else {
-                coverStatus.textContent = 'Upload failed: ' + (data.error || resp.status);
+    if (coverFile) {
+        coverFile.addEventListener('change', async function () {
+            const file = coverFile.files[0];
+            if (!file) return;
+
+            coverStatus.textContent = 'Uploading…';
+            const body = new FormData();
+            body.append('file', file);
+
+            try {
+                const resp = await fetch('/admin/upload/image', {
+                    method: 'POST',
+                    body: body,
+                    headers: { 'X-XSRF-TOKEN': csrfToken }
+                });
+                const data = await resp.json().catch(function () { return {}; });
+                if (resp.ok && data.url) {
+                    coverUrl.value = data.url;
+                    coverPreview.src = data.url;
+                    coverPreviewBox.style.display = '';
+                    coverStatus.textContent = 'Uploaded: ' + data.url;
+                } else {
+                    coverStatus.textContent = 'Upload failed: ' + (data.error || resp.status);
+                }
+            } catch (e) {
+                coverStatus.textContent = 'Upload failed: ' + e.message;
             }
-        } catch (e) {
-            coverStatus.textContent = 'Upload failed: ' + e.message;
-        }
-        coverFile.value = '';
-    });
+            coverFile.value = '';
+        });
+    }
 
-    document.getElementById('cover-remove').addEventListener('click', function () {
-        coverUrl.value = '';
-        coverPreview.removeAttribute('src');
-        coverPreviewBox.style.display = 'none';
-        coverStatus.textContent = 'No cover chosen. Leave empty to use the first image inside the post body automatically.';
-    });
+    if (document.getElementById('cover-remove')) {
+        document.getElementById('cover-remove').addEventListener('click', function () {
+            coverUrl.value = '';
+            coverPreview.removeAttribute('src');
+            coverPreviewBox.style.display = 'none';
+            coverStatus.textContent = 'No cover chosen. Leave empty to use the first image inside the post body automatically.';
+        });
+    }
 })();
 </script>

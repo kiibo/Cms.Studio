@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Cms.Studio.Core\Cms.Studio.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\vendor\vditor\dist\js\i18n\" />
+  </ItemGroup>
+
 </Project>

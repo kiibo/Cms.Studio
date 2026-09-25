@@ -129,8 +129,14 @@ public class EmailVerificationService
             _ = new MailAddress(email);
             return true;
         }
-        catch
+        catch (FormatException)
         {
+            // Invalid email format
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            // Empty or null email
             return false;
         }
     }

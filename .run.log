@@ -1,0 +1,1144 @@
+Using launch settings from Cms.Studio.Web/Properties/launchSettings.json...
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Post" AS "p")
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5290
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/work/.openclaw/workspace/src/Cms.Studio.Net10/Cms.Studio.Web
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@key='?' (Size = 12)], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."Key", "s"."Value"
+      FROM "Setting" AS "s"
+      WHERE "s"."Key" = @key
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Post" AS "p"
+      WHERE "p"."Status" = 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p1='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p0"."Id", "p0"."AuthorName", "p0"."CategoryId", "p0"."ContentMd", "p0"."CoverImageUrl", "p0"."CreatedOnUtc", "p0"."IsFixedTop", "p0"."MetaDescription", "p0"."MetaTitle", "p0"."ModifiedOnUtc", "p0"."PublishedOnUtc", "p0"."Slug", "p0"."Status", "p0"."Summary", "p0"."Title", "p0"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug", "s"."PostId", "s"."TagId", "s"."Id", "s"."Name", "s"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1
+          ORDER BY "p"."IsFixedTop" DESC, "p"."PublishedOnUtc" DESC
+          LIMIT @p1 OFFSET @p
+      ) AS "p0"
+      INNER JOIN "Category" AS "c" ON "p0"."CategoryId" = "c"."Id"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p1"
+          INNER JOIN "Tag" AS "t" ON "p1"."TagId" = "t"."Id"
+      ) AS "s" ON "p0"."Id" = "s"."PostId"
+      ORDER BY "p0"."IsFixedTop" DESC, "p0"."PublishedOnUtc" DESC, "p0"."Id", "c"."Id", "s"."PostId", "s"."TagId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@key='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."Key", "s"."Value"
+      FROM "Setting" AS "s"
+      WHERE "s"."Key" = @key
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@key='?' (Size = 15)], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."Key", "s"."Value"
+      FROM "Setting" AS "s"
+      WHERE "s"."Key" = @key
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@key='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."Key", "s"."Value"
+      FROM "Setting" AS "s"
+      WHERE "s"."Key" = @key
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+warn: Microsoft.EntityFrameworkCore.Query[20504]
+      Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+      FROM "Post" AS "p"
+      WHERE "p"."Id" = @postId
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", "p"."Date", "p"."Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."PostId" = @p AND "p"."Date" = @p1
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "Post" SET "ViewCount" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = DateTime), @p2='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "PostViewDaily" SET "Views" = @p0
+      WHERE "Date" = @p1 AND "PostId" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."PostId" = @postId AND "c"."IsApproved"
+      ORDER BY "c"."CreatedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@post_Id='?' (DbType = Int32), @post_CategoryId='?' (DbType = Int32), @Select1='?' (DbType = Int32), @Select2='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p1"."Id", "p1"."AuthorName", "p1"."CategoryId", "p1"."ContentMd", "p1"."CoverImageUrl", "p1"."CreatedOnUtc", "p1"."IsFixedTop", "p1"."MetaDescription", "p1"."MetaTitle", "p1"."ModifiedOnUtc", "p1"."PublishedOnUtc", "p1"."Slug", "p1"."Status", "p1"."Summary", "p1"."Title", "p1"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1 AND "p"."Id" <> @post_Id AND ("p"."CategoryId" = @post_CategoryId OR EXISTS (
+              SELECT 1
+              FROM "PostTag" AS "p0"
+              WHERE "p"."Id" = "p0"."PostId" AND "p0"."TagId" IN (@Select1, @Select2)))
+          ORDER BY "p"."PublishedOnUtc" DESC
+          LIMIT @p
+      ) AS "p1"
+      INNER JOIN "Category" AS "c" ON "p1"."CategoryId" = "c"."Id"
+      ORDER BY "p1"."PublishedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."PostId" = @postId AND "c"."IsApproved"
+      ORDER BY "c"."CreatedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@post_Id='?' (DbType = Int32), @post_CategoryId='?' (DbType = Int32), @Select1='?' (DbType = Int32), @Select2='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p1"."Id", "p1"."AuthorName", "p1"."CategoryId", "p1"."ContentMd", "p1"."CoverImageUrl", "p1"."CreatedOnUtc", "p1"."IsFixedTop", "p1"."MetaDescription", "p1"."MetaTitle", "p1"."ModifiedOnUtc", "p1"."PublishedOnUtc", "p1"."Slug", "p1"."Status", "p1"."Summary", "p1"."Title", "p1"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1 AND "p"."Id" <> @post_Id AND ("p"."CategoryId" = @post_CategoryId OR EXISTS (
+              SELECT 1
+              FROM "PostTag" AS "p0"
+              WHERE "p"."Id" = "p0"."PostId" AND "p0"."TagId" IN (@Select1, @Select2)))
+          ORDER BY "p"."PublishedOnUtc" DESC
+          LIMIT @p
+      ) AS "p1"
+      INNER JOIN "Category" AS "c" ON "p1"."CategoryId" = "c"."Id"
+      ORDER BY "p1"."PublishedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32), @email='?' (Size = 18), @content='?' (Size = 10), @since='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Comment" AS "c"
+          WHERE "c"."PostId" = @postId AND "c"."Email" = @email AND "c"."Content" = @content AND "c"."CreatedOnUtc" >= @since)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."PostId" = @postId AND "c"."IsApproved"
+      ORDER BY "c"."CreatedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@post_Id='?' (DbType = Int32), @post_CategoryId='?' (DbType = Int32), @Select1='?' (DbType = Int32), @Select2='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p1"."Id", "p1"."AuthorName", "p1"."CategoryId", "p1"."ContentMd", "p1"."CoverImageUrl", "p1"."CreatedOnUtc", "p1"."IsFixedTop", "p1"."MetaDescription", "p1"."MetaTitle", "p1"."ModifiedOnUtc", "p1"."PublishedOnUtc", "p1"."Slug", "p1"."Status", "p1"."Summary", "p1"."Title", "p1"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1 AND "p"."Id" <> @post_Id AND ("p"."CategoryId" = @post_CategoryId OR EXISTS (
+              SELECT 1
+              FROM "PostTag" AS "p0"
+              WHERE "p"."Id" = "p0"."PostId" AND "p0"."TagId" IN (@Select1, @Select2)))
+          ORDER BY "p"."PublishedOnUtc" DESC
+          LIMIT @p
+      ) AS "p1"
+      INNER JOIN "Category" AS "c" ON "p1"."CategoryId" = "c"."Id"
+      ORDER BY "p1"."PublishedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32), @email='?' (Size = 18), @content='?' (Size = 10), @since='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Comment" AS "c"
+          WHERE "c"."PostId" = @postId AND "c"."Email" = @email AND "c"."Content" = @content AND "c"."CreatedOnUtc" >= @since)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p0='?' (Size = 10), @p1='?' (DbType = DateTime), @p2='?' (Size = 18), @p3='?' (DbType = Boolean), @p4='?' (Size = 5), @p5='?' (DbType = Int32), @p6='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "Comment" ("Content", "CreatedOnUtc", "Email", "IsApproved", "NickName", "ParentId", "PostId")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+      FROM "Post" AS "p"
+      WHERE "p"."Id" = @postId
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", "p"."Date", "p"."Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."PostId" = @p AND "p"."Date" = @p1
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "Post" SET "ViewCount" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = DateTime), @p2='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "PostViewDaily" SET "Views" = @p0
+      WHERE "Date" = @p1 AND "PostId" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."PostId" = @postId AND "c"."IsApproved"
+      ORDER BY "c"."CreatedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@post_Id='?' (DbType = Int32), @post_CategoryId='?' (DbType = Int32), @Select1='?' (DbType = Int32), @Select2='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p1"."Id", "p1"."AuthorName", "p1"."CategoryId", "p1"."ContentMd", "p1"."CoverImageUrl", "p1"."CreatedOnUtc", "p1"."IsFixedTop", "p1"."MetaDescription", "p1"."MetaTitle", "p1"."ModifiedOnUtc", "p1"."PublishedOnUtc", "p1"."Slug", "p1"."Status", "p1"."Summary", "p1"."Title", "p1"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1 AND "p"."Id" <> @post_Id AND ("p"."CategoryId" = @post_CategoryId OR EXISTS (
+              SELECT 1
+              FROM "PostTag" AS "p0"
+              WHERE "p"."Id" = "p0"."PostId" AND "p0"."TagId" IN (@Select1, @Select2)))
+          ORDER BY "p"."PublishedOnUtc" DESC
+          LIMIT @p
+      ) AS "p1"
+      INNER JOIN "Category" AS "c" ON "p1"."CategoryId" = "c"."Id"
+      ORDER BY "p1"."PublishedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+      FROM "Post" AS "p"
+      WHERE "p"."Id" = @postId
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", "p"."Date", "p"."Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."PostId" = @p AND "p"."Date" = @p1
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "Post" SET "ViewCount" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = DateTime), @p2='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "PostViewDaily" SET "Views" = @p0
+      WHERE "Date" = @p1 AND "PostId" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."PostId" = @postId AND "c"."IsApproved"
+      ORDER BY "c"."CreatedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@post_Id='?' (DbType = Int32), @post_CategoryId='?' (DbType = Int32), @Select1='?' (DbType = Int32), @Select2='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p1"."Id", "p1"."AuthorName", "p1"."CategoryId", "p1"."ContentMd", "p1"."CoverImageUrl", "p1"."CreatedOnUtc", "p1"."IsFixedTop", "p1"."MetaDescription", "p1"."MetaTitle", "p1"."ModifiedOnUtc", "p1"."PublishedOnUtc", "p1"."Slug", "p1"."Status", "p1"."Summary", "p1"."Title", "p1"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1 AND "p"."Id" <> @post_Id AND ("p"."CategoryId" = @post_CategoryId OR EXISTS (
+              SELECT 1
+              FROM "PostTag" AS "p0"
+              WHERE "p"."Id" = "p0"."PostId" AND "p0"."TagId" IN (@Select1, @Select2)))
+          ORDER BY "p"."PublishedOnUtc" DESC
+          LIMIT @p
+      ) AS "p1"
+      INNER JOIN "Category" AS "c" ON "p1"."CategoryId" = "c"."Id"
+      ORDER BY "p1"."PublishedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Post" AS "p"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Post" AS "p"
+      WHERE "p"."Status" = 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COALESCE(SUM("p"."ViewCount"), 0)
+      FROM "Post" AS "p"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Category" AS "c"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Tag" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Series" AS "s"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Date" AS "Day", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from
+      GROUP BY "p"."Date"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+      ORDER BY "c"."CreatedOnUtc" DESC
+      LIMIT @p
+warn: Microsoft.EntityFrameworkCore.Query[20504]
+      Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p2"."Id", "p2"."AuthorName", "p2"."CategoryId", "p2"."ContentMd", "p2"."CoverImageUrl", "p2"."CreatedOnUtc", "p2"."IsFixedTop", "p2"."MetaDescription", "p2"."MetaTitle", "p2"."ModifiedOnUtc", "p2"."PublishedOnUtc", "p2"."Slug", "p2"."Status", "p2"."Summary", "p2"."Title", "p2"."ViewCount", "s"."PostId", "s"."TagId", "s"."Id", "s"."Name", "s"."Slug", "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Id" = @id
+          LIMIT 1
+      ) AS "p2"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s" ON "p2"."Id" = "s"."PostId"
+      LEFT JOIN "PostSeries" AS "p1" ON "p2"."Id" = "p1"."PostId"
+      ORDER BY "p2"."Id", "s"."PostId", "s"."TagId", "s"."Id", "p1"."PostId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p2"."Id", "p2"."AuthorName", "p2"."CategoryId", "p2"."ContentMd", "p2"."CoverImageUrl", "p2"."CreatedOnUtc", "p2"."IsFixedTop", "p2"."MetaDescription", "p2"."MetaTitle", "p2"."ModifiedOnUtc", "p2"."PublishedOnUtc", "p2"."Slug", "p2"."Status", "p2"."Summary", "p2"."Title", "p2"."ViewCount", "s"."PostId", "s"."TagId", "s"."Id", "s"."Name", "s"."Slug", "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Id" = @id
+          LIMIT 1
+      ) AS "p2"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s" ON "p2"."Id" = "s"."PostId"
+      LEFT JOIN "PostSeries" AS "p1" ON "p2"."Id" = "p1"."PostId"
+      ORDER BY "p2"."Id", "s"."PostId", "s"."TagId", "s"."Id", "p1"."PostId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."Id" = @id
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+      UPDATE "Comment" SET "IsApproved" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+      ORDER BY "c"."CreatedOnUtc" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p2"."Id", "p2"."AuthorName", "p2"."CategoryId", "p2"."ContentMd", "p2"."CoverImageUrl", "p2"."CreatedOnUtc", "p2"."IsFixedTop", "p2"."MetaDescription", "p2"."MetaTitle", "p2"."ModifiedOnUtc", "p2"."PublishedOnUtc", "p2"."Slug", "p2"."Status", "p2"."Summary", "p2"."Title", "p2"."ViewCount", "s"."PostId", "s"."TagId", "s"."Id", "s"."Name", "s"."Slug", "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Id" = @id
+          LIMIT 1
+      ) AS "p2"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s" ON "p2"."Id" = "s"."PostId"
+      LEFT JOIN "PostSeries" AS "p1" ON "p2"."Id" = "p1"."PostId"
+      ORDER BY "p2"."Id", "s"."PostId", "s"."TagId", "s"."Id", "p1"."PostId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."Id" = @id
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+      UPDATE "Comment" SET "IsApproved" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+      ORDER BY "c"."CreatedOnUtc" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@slug='?' (Size = 11)], CommandType='Text', CommandTimeout='30']
+      SELECT "s0"."Id", "s0"."AuthorName", "s0"."CategoryId", "s0"."ContentMd", "s0"."CoverImageUrl", "s0"."CreatedOnUtc", "s0"."IsFixedTop", "s0"."MetaDescription", "s0"."MetaTitle", "s0"."ModifiedOnUtc", "s0"."PublishedOnUtc", "s0"."Slug", "s0"."Status", "s0"."Summary", "s0"."Title", "s0"."ViewCount", "s0"."Id0", "s0"."Description", "s0"."DisplayOrder", "s0"."MetaDescription0", "s0"."MetaTitle0", "s0"."Name", "s0"."ParentCategoryId", "s0"."ShowOnMenu", "s0"."Slug0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s1"."Name", "s1"."Slug", "s2"."PostId", "s2"."SeriesId", "s2"."DisplayOrder", "s2"."Id", "s2"."CoverImageUrl", "s2"."Description", "s2"."DisplayOrder0", "s2"."Slug", "s2"."Title"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id" AS "Id0", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription" AS "MetaDescription0", "c"."MetaTitle" AS "MetaTitle0", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug" AS "Slug0"
+          FROM "Post" AS "p"
+          INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+          WHERE "p"."Status" = 1 AND "p"."Slug" = @slug
+          LIMIT 1
+      ) AS "s0"
+      LEFT JOIN (
+          SELECT "p0"."PostId", "p0"."TagId", "t"."Id", "t"."Name", "t"."Slug"
+          FROM "PostTag" AS "p0"
+          INNER JOIN "Tag" AS "t" ON "p0"."TagId" = "t"."Id"
+      ) AS "s1" ON "s0"."Id" = "s1"."PostId"
+      LEFT JOIN (
+          SELECT "p1"."PostId", "p1"."SeriesId", "p1"."DisplayOrder", "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder" AS "DisplayOrder0", "s"."Slug", "s"."Title"
+          FROM "PostSeries" AS "p1"
+          INNER JOIN "Series" AS "s" ON "p1"."SeriesId" = "s"."Id"
+      ) AS "s2" ON "s0"."Id" = "s2"."PostId"
+      ORDER BY "s0"."Id", "s0"."Id0", "s1"."PostId", "s1"."TagId", "s1"."Id", "s2"."PostId", "s2"."SeriesId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+      FROM "Post" AS "p"
+      WHERE "p"."Id" = @postId
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32), @p1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", "p"."Date", "p"."Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."PostId" = @p AND "p"."Date" = @p1
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "Post" SET "ViewCount" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = DateTime), @p2='?' (DbType = Int32), @p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "PostViewDaily" SET "Views" = @p0
+      WHERE "Date" = @p1 AND "PostId" = @p2
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@postId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Content", "c"."CreatedOnUtc", "c"."Email", "c"."IsApproved", "c"."NickName", "c"."ParentId", "c"."PostId"
+      FROM "Comment" AS "c"
+      WHERE "c"."PostId" = @postId AND "c"."IsApproved"
+      ORDER BY "c"."CreatedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@post_Id='?' (DbType = Int32), @post_CategoryId='?' (DbType = Int32), @Select1='?' (DbType = Int32), @Select2='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p1"."Id", "p1"."AuthorName", "p1"."CategoryId", "p1"."ContentMd", "p1"."CoverImageUrl", "p1"."CreatedOnUtc", "p1"."IsFixedTop", "p1"."MetaDescription", "p1"."MetaTitle", "p1"."ModifiedOnUtc", "p1"."PublishedOnUtc", "p1"."Slug", "p1"."Status", "p1"."Summary", "p1"."Title", "p1"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM (
+          SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount"
+          FROM "Post" AS "p"
+          WHERE "p"."Status" = 1 AND "p"."Id" <> @post_Id AND ("p"."CategoryId" = @post_CategoryId OR EXISTS (
+              SELECT 1
+              FROM "PostTag" AS "p0"
+              WHERE "p"."Id" = "p0"."PostId" AND "p0"."TagId" IN (@Select1, @Select2)))
+          ORDER BY "p"."PublishedOnUtc" DESC
+          LIMIT @p
+      ) AS "p1"
+      INNER JOIN "Category" AS "c" ON "p1"."CategoryId" = "c"."Id"
+      ORDER BY "p1"."PublishedOnUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Category" AS "c"
+      WHERE "c"."ShowOnMenu"
+      ORDER BY "c"."DisplayOrder", "c"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Slug", COUNT(*) AS "Count"
+      FROM "PostTag" AS "p"
+      INNER JOIN "Post" AS "p0" ON "p"."PostId" = "p0"."Id"
+      INNER JOIN "Tag" AS "t" ON "p"."TagId" = "t"."Id"
+      WHERE "p0"."Status" = 1
+      GROUP BY "t"."Id", "t"."Name", "t"."Slug"
+      ORDER BY COUNT(*) DESC, "t"."Name"
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "s"."Id", "s"."CoverImageUrl", "s"."Description", "s"."DisplayOrder", "s"."Slug", "s"."Title"
+      FROM "Series" AS "s"
+      ORDER BY "s"."DisplayOrder", "s"."Title"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Post" AS "p"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Post" AS "p"
+      WHERE "p"."Status" = 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COALESCE(SUM("p"."ViewCount"), 0)
+      FROM "Post" AS "p"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Category" AS "c"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Tag" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Series" AS "s"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+      WHERE NOT ("c"."IsApproved")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Comment" AS "c"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@from='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Date" AS "Day", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from
+      GROUP BY "p"."Date"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@from='?' (DbType = DateTime), @today='?' (DbType = DateTime), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."PostId", COALESCE(SUM("p"."Views"), 0) AS "Views"
+      FROM "PostViewDaily" AS "p"
+      WHERE "p"."Date" >= @from AND "p"."Date" <= @today
+      GROUP BY "p"."PostId"
+      ORDER BY COALESCE(SUM("p"."Views"), 0) DESC, "p"."PostId" DESC
+      LIMIT @p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ids1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Id", "p"."AuthorName", "p"."CategoryId", "p"."ContentMd", "p"."CoverImageUrl", "p"."CreatedOnUtc", "p"."IsFixedTop", "p"."MetaDescription", "p"."MetaTitle", "p"."ModifiedOnUtc", "p"."PublishedOnUtc", "p"."Slug", "p"."Status", "p"."Summary", "p"."Title", "p"."ViewCount", "c"."Id", "c"."Description", "c"."DisplayOrder", "c"."MetaDescription", "c"."MetaTitle", "c"."Name", "c"."ParentCategoryId", "c"."ShowOnMenu", "c"."Slug"
+      FROM "Post" AS "p"
+      INNER JOIN "Category" AS "c" ON "p"."CategoryId" = "c"."Id"
+      WHERE "p"."Status" = 1 AND "p"."Id" = @ids1
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...

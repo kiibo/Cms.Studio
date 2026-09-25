@@ -57,9 +57,11 @@ public class VisitTrackingMiddleware
             });
             await db.SaveChangesAsync();
         }
-        catch
+        catch (Exception ex)
         {
             // Tracking must never break page rendering.
+            // Log the exception but don't rethrow to ensure the request completes normally.
+            System.Diagnostics.Debug.WriteLine($"VisitTracking error: {ex.Message}");
         }
     }
 

@@ -28,15 +28,18 @@ public class AdminUploadController : Controller
     [HttpPost("image")]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(MaxBytes)]
-    public async Task<IActionResult> Image(IFormFile file)
+    public async Task<IActionResult> Image(IFormFile? file)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { error = "No file received." });
         if (file.Length > MaxBytes)
             return BadRequest(new { error = "Image is larger than 10 MB." });
 
-        var ext = Path.GetExtension(file.FileName ?? string.Empty);
-        if (!AllowedExtensions.Contains(ext))
+        if (string.IsNullOrWhiteSpace(file.FileName))
+            return BadRequest(new { error = "File name is empty." });
+
+        var ext = Path.GetExtension(file.FileName);
+        if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext))
             return BadRequest(new { error = $"Unsupported image type '{ext}'." });
 
         // Magic-byte sniff: never trust the extension alone.
@@ -49,9 +52,17 @@ public class AdminUploadController : Controller
             return BadRequest(new { error = "File content does not look like a valid image." });
 
         var relative = $"/uploads/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
-        var absolute = Path.Combine(_env.WebRootPath,
+        var webRootPath = _env.WebRootPath;
+        if (string.IsNullOrEmpty(webRootPath))
+            return StatusCode(500, new { error = "WebRoot path is not configured." });
+
+        var absolute = Path.Combine(webRootPath,
             relative.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-        Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
+        var directoryPath = Path.GetDirectoryName(absolute);
+        if (string.IsNullOrEmpty(directoryPath))
+            return StatusCode(500, new { error = "Invalid directory path." });
+
+        Directory.CreateDirectory(directoryPath);
 
         await using (var target = System.IO.File.Create(absolute))
         {
