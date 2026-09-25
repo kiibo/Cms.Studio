@@ -29,6 +29,8 @@ builder.Services.AddScoped<CommentService>();
 
 // ---------- web ----------
 builder.Services.AddControllersWithViews();
+// The editor uploads images via fetch/XHR, so accept the antiforgery token as a header too.
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -53,6 +55,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Cms.Studio.Web.Infrastructure.VisitTrackingMiddleware>();
 
 app.MapControllerRoute(
     name: "default",

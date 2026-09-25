@@ -1,0 +1,22 @@
+@model List<StatSlice>
+@{
+    var total = Model.Sum(s => s.Count);
+}
+@if (Model.Count == 0)
+{
+    <p class="muted">No data yet.</p>
+}
+else
+{
+    <ul class="dist-list">
+        @foreach (var slice in Model)
+        {
+            var pct = total > 0 ? slice.Count * 100 / total : 0;
+            <li>
+                <span class="dist-label" title="@slice.Key">@slice.Key</span>
+                <span class="dist-bar"><span style="width:@pct%"></span></span>
+                <span class="dist-num">@slice.Count</span>
+            </li>
+        }
+    </ul>
+}

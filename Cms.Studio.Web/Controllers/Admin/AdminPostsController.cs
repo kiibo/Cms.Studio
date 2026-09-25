@@ -27,7 +27,9 @@ public class AdminDashboardController : Controller
         {
             Stats = await _stats.GetAsync(),
             Trend = await _posts.GetViewsTrendAsync(30),
-            TopPosts = await _posts.GetRankingAsync(RankPeriod.Monthly, 10)
+            TopPosts = await _posts.GetRankingAsync(RankPeriod.Monthly, 10),
+            VisitorTrend = await _stats.GetDailyUniqueVisitorsAsync(30),
+            Visitors = await _stats.GetVisitorStatsAsync(30)
         };
         return View("~/Views/Admin/Dashboard.cshtml", model);
     }
@@ -112,7 +114,10 @@ public class AdminPostsController : Controller
         post.Summary = model.Post.Summary;
         post.ContentMd = model.Post.ContentMd;
         post.CoverImageUrl = model.Post.CoverImageUrl;
-        post.AuthorName = model.Post.AuthorName;
+        // Author is not editable: new posts are owned by the signed-in admin,
+        // existing posts keep their original author (filled in lazily when empty).
+        if (string.IsNullOrWhiteSpace(post.AuthorName))
+            post.AuthorName = User.Identity?.Name ?? "Admin";
         post.CategoryId = model.Post.CategoryId;
         post.Status = model.Post.Status;
         post.IsFixedTop = model.Post.IsFixedTop;

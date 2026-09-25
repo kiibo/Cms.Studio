@@ -99,6 +99,24 @@ public class PostViewDaily
     public int Views { get; set; }
 }
 
+/// <summary>One row per tracked page request: who visited, from where, with what client.</summary>
+public class VisitRecord
+{
+    public int Id { get; set; }
+    public string Ip { get; set; } = string.Empty;
+    /// <summary>Raw User-Agent (truncated to 500 chars).</summary>
+    public string? UserAgent { get; set; }
+    /// <summary>Chrome / Edge / Safari / Firefox / … or "Bot".</summary>
+    public string? Browser { get; set; }
+    /// <summary>Windows 10/11 / macOS / Android / iOS / …</summary>
+    public string? Platform { get; set; }
+    /// <summary>Desktop / Mobile / Tablet / Bot / Unknown.</summary>
+    public string? Device { get; set; }
+    public string? Path { get; set; }
+    public string? Referer { get; set; }
+    public DateTime VisitedOnUtc { get; set; }
+}
+
 /// <summary>Keeps old slugs so renamed posts can answer with a 301 for SEO.</summary>
 public class SlugHistory
 {

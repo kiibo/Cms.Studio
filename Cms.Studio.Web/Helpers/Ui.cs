@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Cms.Studio.Core.Domain;
 
 namespace Cms.Studio.Web.Helpers;
@@ -26,6 +27,26 @@ public static class Ui
     public static string Absolute(string baseUrl, string relativePath)
     {
         return baseUrl.TrimEnd('/') + "/" + relativePath.TrimStart('/');
+    }
+
+    private static readonly Regex MdImage = new(@"!\[[^\]]*\]\((?<url>[^\s\)]+)", RegexOptions.Compiled);
+    private static readonly Regex HtmlImage = new(@"<img[^>]+src=[""'](?<url>[^""']+)[""']", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Cover image for cards / hero / og:image. Explicit CoverImageUrl wins,
+    /// otherwise the first image found in the Markdown body (Masuit.MyBlogs style) is used.
+    /// </summary>
+    public static string? CoverUrl(Post post)
+    {
+        if (!string.IsNullOrWhiteSpace(post.CoverImageUrl))
+            return post.CoverImageUrl;
+        if (string.IsNullOrWhiteSpace(post.ContentMd))
+            return null;
+
+        var m = MdImage.Match(post.ContentMd);
+        if (!m.Success)
+            m = HtmlImage.Match(post.ContentMd);
+        return m.Success ? m.Groups["url"].Value : null;
     }
 }
 

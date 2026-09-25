@@ -1,12 +1,54 @@
 @model ListViewModel
+@{
+    var items = Model.Posts.Items.ToList();
+    // Hero (Masuit.MyBlogs style, see design reference): top 3 image posts on page 1.
+    var hero = Model.Posts.Page == 1
+        ? items.Where(p => Ui.CoverUrl(p) != null).Take(3).ToList()
+        : new List<Post>();
+    var heroIds = hero.Select(p => p.Id).ToHashSet();
+    var feed = items.Where(p => !heroIds.Contains(p.Id)).ToList();
+}
+
+@if (hero.Count > 0)
+{
+    var main = hero[0];
+    var side = hero.Skip(1).ToList();
+    <section class="hero @(hero.Count == 1 ? "hero-single" : "")">
+        <a class="hero-card hero-main" href="/blog/@main.Slug">
+            <img src="@Ui.CoverUrl(main)" alt="" />
+            <div class="hero-mask">
+                <span class="hero-tag">@main.Category.Name</span>
+                <h2>@main.Title</h2>
+            </div>
+        </a>
+        @if (side.Count > 0)
+        {
+            <div class="hero-side">
+                @foreach (var p in side)
+                {
+                    <a class="hero-card" href="/blog/@p.Slug">
+                        <img src="@Ui.CoverUrl(p)" alt="" loading="lazy" />
+                        <div class="hero-mask">
+                            <h3>@p.Title</h3>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </section>
+}
 
 <section class="feed">
-    <h1 class="section-heading">Latest</h1>
-    @if (Model.Posts.Items.Count == 0)
+    @if (feed.Count > 0)
     {
+        <h1 class="section-heading">Latest</h1>
+    }
+    @if (items.Count == 0)
+    {
+        <h1 class="section-heading">Latest</h1>
         <p class="muted">Nothing here yet. Write your first post in the <a href="/admin">admin area</a>.</p>
     }
-    @foreach (var post in Model.Posts.Items)
+    @foreach (var post in feed)
     {
         <partial name="_PostCard" model="post" />
     }

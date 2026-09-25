@@ -184,7 +184,7 @@ public class BlogController : Controller
         ViewData["Title"] = post.MetaTitle ?? post.Title;
         ViewData["MetaDescription"] = post.MetaDescription ?? post.Summary;
         ViewData["CanonicalUrl"] = $"/blog/{post.Slug}";
-        ViewData["OgImage"] = post.CoverImageUrl;
+        ViewData["OgImage"] = Ui.CoverUrl(post);
         ViewData["JsonLd"] = JsonLd.BlogPosting(post, url, siteTitle, await _settings.GetSiteDescriptionAsync());
     }
 

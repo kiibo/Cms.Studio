@@ -1,23 +1,44 @@
 @using Cms.Studio.Core.Domain
 @model Post
+@{
+    var cover = Ui.CoverUrl(Model);
+}
 
-<article class="feed-item">
-    <h2 class="feed-title">
-        @if (Model.IsFixedTop)
-        {
-            <span class="badge-top">Top</span>
-        }
-        <a href="/blog/@Model.Slug">@Model.Title</a>
-    </h2>
-    <p class="feed-summary">@Model.Summary</p>
-    <div class="feed-meta">
-        <span class="feed-tags">
-            Tags:
-            @foreach (var pt in Model.PostTags)
+<article class="feed-item @(cover != null ? "has-thumb" : "")">
+    <div class="feed-text">
+        <h2 class="feed-title">
+            @if (Model.IsFixedTop)
             {
-                <a href="/tag/@pt.Tag.Slug">@pt.Tag.Name</a>@(pt != Model.PostTags.Last() ? ", " : "")
+                <span class="badge-top">Top</span>
             }
-        </span>
-        <time datetime="@Ui.Iso(Model.PublishedOnUtc ?? Model.CreatedOnUtc)">@Ui.Date(Model.PublishedOnUtc ?? Model.CreatedOnUtc)</time>
+            <a href="/blog/@Model.Slug">@Model.Title</a>
+        </h2>
+        <p class="feed-summary">@Model.Summary</p>
+        <div class="feed-meta">
+            <span class="feed-tags">
+                <a class="feed-cat" href="/category/@Model.Category.Slug">@Model.Category.Name</a>
+                <span class="dot">·</span>
+                @if (!string.IsNullOrWhiteSpace(Model.AuthorName))
+                {
+                    <span>@Model.AuthorName</span>
+                    <span class="dot">·</span>
+                }
+                <time datetime="@Ui.Iso(Model.PublishedOnUtc ?? Model.CreatedOnUtc)">@Ui.Date(Model.PublishedOnUtc ?? Model.CreatedOnUtc)</time>
+                <span class="dot">·</span>
+                <span>@Model.ViewCount.ToString("N0") views</span>
+            </span>
+            <span class="feed-tags-inline">
+                @foreach (var pt in Model.PostTags)
+                {
+                    <a href="/tag/@pt.Tag.Slug">@pt.Tag.Name</a>@(pt != Model.PostTags.Last() ? ", " : "")
+                }
+            </span>
+        </div>
     </div>
+    @if (cover != null)
+    {
+        <a class="feed-thumb" href="/blog/@Model.Slug" aria-hidden="true" tabindex="-1">
+            <img src="@cover" alt="" loading="lazy" />
+        </a>
+    }
 </article>

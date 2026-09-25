@@ -75,6 +75,10 @@ public class AdminDashboardViewModel
     public DashboardStats Stats { get; set; } = new();
     public List<DailyViews> Trend { get; set; } = new();
     public List<RankItem> TopPosts { get; set; } = new();
+    /// <summary>Unique visitors per day (same IP + same day counts once).</summary>
+    public List<DailyVisits> VisitorTrend { get; set; } = new();
+    /// <summary>Visitor aggregates for the last 30 days.</summary>
+    public VisitorStats Visitors { get; set; } = new();
 }
 
 public class AdminPostEditViewModel

@@ -16,6 +16,7 @@ public class CmsDbContext : DbContext
     public DbSet<Series> Series => Set<Series>();
     public DbSet<PostSeries> PostSeries => Set<PostSeries>();
     public DbSet<PostViewDaily> PostViewDaily => Set<PostViewDaily>();
+    public DbSet<VisitRecord> VisitRecords => Set<VisitRecord>();
     public DbSet<SlugHistory> SlugHistory => Set<SlugHistory>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<Comment> Comments => Set<Comment>();
@@ -91,6 +92,21 @@ public class CmsDbContext : DbContext
             entity.ToTable("PostViewDaily");
             entity.HasKey(e => new { e.PostId, e.Date });
             entity.HasOne(e => e.Post).WithMany().HasForeignKey(e => e.PostId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<VisitRecord>(entity =>
+        {
+            entity.ToTable("VisitRecord");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Ip).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.Browser).HasMaxLength(60);
+            entity.Property(e => e.Platform).HasMaxLength(60);
+            entity.Property(e => e.Device).HasMaxLength(20);
+            entity.Property(e => e.Path).HasMaxLength(300);
+            entity.Property(e => e.Referer).HasMaxLength(300);
+            entity.HasIndex(e => e.VisitedOnUtc);
+            entity.HasIndex(e => new { e.Ip, e.VisitedOnUtc });
         });
 
         builder.Entity<SlugHistory>(entity =>

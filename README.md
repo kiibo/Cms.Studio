@@ -5,7 +5,10 @@ Combines nopCommerce's multi-database & admin management strengths with Masuit.M
 
 ## Features
 
-- **Writing**: web-based Markdown editor, draft/published status, pin to top, summary, cover image
+- **Writing**: Vditor Markdown editor (self-hosted, no CDN) with toolbar, split / WYSIWYG / preview modes,
+  outline, fullscreen and **drag & drop / paste image upload**; draft/published status, pin to top, summary, cover image
+- **Homepage images**: hero section (1 large + 2 small featured posts) and per-post thumbnails;
+  the cover is the post's cover URL, falling back to the first image in the Markdown body (masuit.blog-style)
 - **Comments** (masuit.blog-style): guests leave a nick name, email and comment; a 6-digit **verification code**
   is e-mailed to the address and must be submitted with the comment. Codes are valid 24h, single use, re-send
   throttled to 2 min. Comments land as **pending** and are published from the admin area after approval.
@@ -14,12 +17,15 @@ Combines nopCommerce's multi-database & admin management strengths with Masuit.M
 - **SEO**: clean slug URLs, canonical, Open Graph / Twitter Card, JSON-LD `BlogPosting`, `sitemap.xml`, `robots.txt`, RSS, automatic 301 on slug change
 - **AI ingestion**: `llms.txt` (structured site index), `llms-full.txt` (full-text Markdown mirror), raw Markdown at `/blog/{slug}.md`
 - **Rankings**: Daily / Weekly / Monthly top lists (from per-day view stats); mobile entries live in the navigation bar
+- **Visitor analytics**: every page request is recorded (IP, User-Agent, device / browser / OS, path, referrer);
+  the admin dashboard shows a 30-day visitor curve where **the same IP on the same day counts once**,
+  plus PV/UV counters, device/browser/OS distributions and top IPs
 - **Admin**: dashboard (stat cards + 30-day trend + monthly Top 10), posts / categories / series / tags / settings
 
 ## Quick start
 
 ```bash
-cd src/Cms.Studio.Net10
+cd Cms.Studio   # repository root
 dotnet run --project Cms.Studio.Web
 ```
 
@@ -93,7 +99,7 @@ Cms.Studio.Web    MVC controllers + Razor views (public + admin, all in English)
 In environments with a low `RLIMIT_FSIZE` (e.g. some sandboxes), the .NET runtime's W^X feature trips
 SIGXFSZ on its 2 TiB JIT memory file. Set `DOTNET_EnableWriteXorExecute=0` to run normally there.
 
-## Difference from the net9 version
+## Editions
 
-`src/Cms.Studio/` is the original .NET 9 edition (admin UI in Chinese). This .NET 10 edition targets
-`net10.0` with EF Core 10 and ships with the whole UI in English. Both are independent and can run side by side.
+This repository ships the **.NET 10 edition** (`net10.0`, EF Core 10, admin UI in English) only.
+Older experimental editions are not part of this repo.

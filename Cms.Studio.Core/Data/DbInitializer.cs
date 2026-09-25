@@ -62,6 +62,7 @@ public static class DbInitializer
                 """,
             AuthorName = "Admin",
             CategoryId = ai.Id,
+            CoverImageUrl = "https://picsum.photos/seed/cmsstudio-welcome/960/540",
             Status = PostStatus.Published,
             IsFixedTop = true,
             PublishedOnUtc = now,
@@ -88,11 +89,77 @@ public static class DbInitializer
                 """,
             AuthorName = "Admin",
             CategoryId = eng.Id,
+            CoverImageUrl = "https://picsum.photos/seed/cmsstudio-writing/960/540",
             Status = PostStatus.Published,
             PublishedOnUtc = now.AddHours(-3),
             CreatedOnUtc = now.AddHours(-3)
         };
-        db.Posts.AddRange(welcome, writing);
+        var images = new Post
+        {
+            Slug = "choosing-cover-images",
+            Title = "Choosing Cover Images That Work",
+            Summary = "Why every post deserves a cover image, how the homepage hero picks its stories, and what makes a thumbnail readable at 168 pixels.",
+            ContentMd = """
+                # Choosing Cover Images That Work
+
+                The homepage hero and the feed cards pick up the cover image of each post — either the explicit
+                cover URL or the first image inside the Markdown body.
+
+                ## Rules of thumb
+
+                1. **Landscape beats portrait.** Cards crop to 3:2.
+                2. **Keep the subject centred.** The bottom third is covered by the title gradient.
+                3. **High contrast.** White text needs a dark lower edge.
+
+                ![A calm desk setup](https://picsum.photos/seed/cmsstudio-inline/960/540)
+                """,
+            AuthorName = "Admin",
+            CategoryId = eng.Id,
+            CoverImageUrl = "https://picsum.photos/seed/cmsstudio-covers/960/540",
+            Status = PostStatus.Published,
+            PublishedOnUtc = now.AddHours(-6),
+            CreatedOnUtc = now.AddHours(-6)
+        };
+        db.Posts.AddRange(welcome, writing, images);
+
+        var noCoverA = new Post
+        {
+            Slug = "markdown-tips",
+            Title = "Small Markdown Tricks Worth Stealing",
+            Summary = "Tables, footnotes, task lists and fenced code — the handful of Markdown features that do most of the heavy lifting in technical posts.",
+            ContentMd = """
+                # Small Markdown Tricks Worth Stealing
+
+                - Task lists keep tutorials honest: `- [x] done`, `- [ ] todo`
+                - Tables beat screenshots for config options
+                - Fenced code with a language tag gives you syntax highlighting
+                """,
+            AuthorName = "Admin",
+            CategoryId = eng.Id,
+            Status = PostStatus.Published,
+            PublishedOnUtc = now.AddHours(-9),
+            CreatedOnUtc = now.AddHours(-9)
+        };
+        var noCoverB = new Post
+        {
+            Slug = "llms-txt-explained",
+            Title = "llms.txt, Explained",
+            Summary = "What the llms.txt convention is, why this site serves llms-full.txt and raw Markdown, and how it helps AI assistants quote you correctly.",
+            ContentMd = """
+                # llms.txt, Explained
+
+                `llms.txt` is a short, structured index of a site written for language models.
+                This site also mirrors every post as raw Markdown at `/blog/{slug}.md`.
+
+                ![A simple diagram](https://picsum.photos/seed/cmsstudio-llms/960/540)
+                """,
+            AuthorName = "Admin",
+            CategoryId = ai.Id,
+            Status = PostStatus.Published,
+            PublishedOnUtc = now.AddHours(-12),
+            CreatedOnUtc = now.AddHours(-12)
+        };
+        db.Posts.AddRange(noCoverA, noCoverB);
         db.PostSeries.Add(new PostSeries { Post = welcome, Series = series, DisplayOrder = 1 });
 
         var tagAi = new Tag { Name = "AI", Slug = "ai" };

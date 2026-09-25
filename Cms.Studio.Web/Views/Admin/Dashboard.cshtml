@@ -4,6 +4,7 @@
     ViewData["Title"] = "Dashboard";
 
     var maxViews = Model.Trend.Count == 0 ? 0 : Model.Trend.Max(t => t.Views);
+    var maxVisitors = Model.VisitorTrend.Count == 0 ? 0 : Model.VisitorTrend.Max(t => t.Visitors);
 }
 
 <h1>Dashboard</h1>
@@ -13,11 +14,27 @@
     <div class="stat-card"><span class="stat-num">@Model.Stats.PublishedPosts</span><span class="stat-label">Published</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.DraftPosts</span><span class="stat-label">Drafts</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.TotalViews</span><span class="stat-label">Total views</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Visitors.Pv</span><span class="stat-label">Page views (30d)</span></div>
+    <div class="stat-card"><span class="stat-num">@Model.Visitors.Uv</span><span class="stat-label">Unique IPs (30d)</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.TotalCategories</span><span class="stat-label">Categories</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.TotalSeries</span><span class="stat-label">Series</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.TotalTags</span><span class="stat-label">Tags</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.TotalComments</span><span class="stat-label">Comments</span></div>
     <div class="stat-card"><span class="stat-num">@Model.Stats.PendingComments</span><span class="stat-label">Pending comments</span></div>
+</div>
+
+<div class="admin-card">
+    <h2>Visitors — last 30 days (same IP + same day counts once)</h2>
+    <div class="trend">
+        @foreach (var day in Model.VisitorTrend)
+        {
+            var height = maxVisitors > 0 ? day.Visitors * 100 / maxVisitors : 0;
+            <div class="trend-col" title="@day.Day.ToString("MM-dd"): @day.Visitors unique IPs">
+                <div class="trend-bar" style="height: @(height)%;"></div>
+                <span class="trend-day">@day.Day.ToString("dd")</span>
+            </div>
+        }
+    </div>
 </div>
 
 <div class="admin-card">
@@ -32,6 +49,49 @@
             </div>
         }
     </div>
+</div>
+
+<div class="admin-card">
+    <h2>Visitors by device / browser / OS (30 days)</h2>
+    <div class="dist-grid">
+        <div>
+            <h3 class="dist-head">Device</h3>
+            @await Html.PartialAsync("_Distribution", Model.Visitors.Devices)
+        </div>
+        <div>
+            <h3 class="dist-head">Browser</h3>
+            @await Html.PartialAsync("_Distribution", Model.Visitors.Browsers)
+        </div>
+        <div>
+            <h3 class="dist-head">OS</h3>
+            @await Html.PartialAsync("_Distribution", Model.Visitors.Platforms)
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h2>Top IPs (30 days)</h2>
+    @if (Model.Visitors.TopIps.Count == 0)
+    {
+        <p class="muted">No visits recorded yet.</p>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr><th>IP</th><th>Visits</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var ip in Model.Visitors.TopIps)
+                {
+                    <tr>
+                        <td><code>@ip.Ip</code></td>
+                        <td>@ip.Count</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>
 
 <div class="admin-card">
