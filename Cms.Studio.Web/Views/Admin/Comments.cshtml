@@ -4,80 +4,110 @@
     ViewData["Title"] = "Comments";
     var comments = (List<Comment>)ViewBag.Comments;
     var postTitles = (Dictionary<int, string>)ViewBag.PostTitles;
-    var filter = (string)ViewBag.Filter;
+    var keyword = (string)ViewBag.Keyword;
+    var status = (string)ViewBag.Status;
 }
 
 <div class="admin-head">
-    <h1>Comments <span class="muted">(@ViewBag.PendingCount pending)</span></h1>
-    <div class="filter-form">
-        <a class="btn @(filter == "pending" ? "" : "secondary")" href="/admin/comments?filter=pending">Pending</a>
-        <a class="btn @(filter == "all" ? "" : "secondary")" href="/admin/comments?filter=all">All</a>
-    </div>
+    <h1>Blog comments <span class="muted">(@ViewBag.PendingCount pending)</span></h1>
+    <form class="filter-form" method="get" action="/admin/comments">
+        <select name="status">
+            <option value="all" selected="@(status == "all" ? "selected" : null)">All</option>
+            <option value="pending" selected="@(status == "pending" ? "selected" : null)">Not approved</option>
+            <option value="approved" selected="@(status == "approved" ? "selected" : null)">Approved</option>
+        </select>
+        <input type="text" name="keyword" value="@keyword" placeholder="Search comment / name / email…" />
+        <button type="submit" class="btn secondary">Search</button>
+    </form>
 </div>
 
 <div class="admin-card">
-    @if (comments.Count == 0)
-    {
-        <p class="muted">@(filter == "pending" ? "No comments awaiting moderation." : "No comments yet.")</p>
-    }
-    else
-    {
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Post</th>
-                    <th>Nick name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var comment in comments)
-                {
+    <form method="post" action="/admin/comments/action" id="comments-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="status" value="@status" />
+        <input type="hidden" name="keyword" value="@keyword" />
+
+        <div class="bulk-bar">
+            <button type="submit" name="bulkAction" value="approve" class="btn">Approve selected</button>
+            <button type="submit" name="bulkAction" value="disapprove" class="btn secondary">Disapprove selected</button>
+            <button type="submit" name="bulkAction" value="delete" class="btn secondary"
+                    onclick="return confirm('Delete the selected comments?');">
+                Delete selected
+            </button>
+        </div>
+
+        @if (comments.Count == 0)
+        {
+            <p class="muted">No comments match this filter.</p>
+        }
+        else
+        {
+            <table class="admin-table">
+                <thead>
                     <tr>
-                        <td>
-                            <span title="Post id @comment.PostId">@postTitles[comment.PostId]</span>
-                        </td>
-                        <td>@comment.NickName</td>
-                        <td>@comment.Email</td>
-                        <td class="comment-cell">
-                            @if (comment.ParentId != null)
-                            {
-                                <span class="muted">(reply) </span>
-                            }
-                            @(comment.Content.Length > 120 ? comment.Content[..120] + "…" : comment.Content)
-                        </td>
-                        <td>@Ui.DateTimeShort(comment.CreatedOnUtc)</td>
-                        <td>
-                            @if (comment.IsApproved)
-                            {
-                                <span class="success">Approved</span>
-                            }
-                            else
-                            {
-                                <span class="error">Pending</span>
-                            }
-                        </td>
-                        <td class="actions">
-                            @if (!comment.IsApproved)
-                            {
-                                <form method="post" action="/admin/comments/approve/@comment.Id" class="inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="link-btn">Approve</button>
-                                </form>
-                            }
-                            <form method="post" action="/admin/comments/delete/@comment.Id" class="inline"
-                                  onsubmit="return confirm('Delete this comment?');">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="link-btn">Delete</button>
-                            </form>
-                        </td>
+                        <th><input type="checkbox" id="check-all" title="Select all" /></th>
+                        <th>Post</th>
+                        <th>Customer</th>
+                        <th>Comment</th>
+                        <th>Created on</th>
+                        <th>Approved</th>
+                        <th>Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    }
+                </thead>
+                <tbody>
+                    @foreach (var comment in comments)
+                    {
+                        <tr>
+                            <td><input type="checkbox" name="ids" value="@comment.Id" class="row-check" /></td>
+                            <td>
+                                <a href="/admin/posts/edit/@comment.PostId" title="Edit post">@postTitles[comment.PostId]</a>
+                            </td>
+                            <td class="comment-customer">
+                                <strong>@comment.NickName</strong>
+                                <span class="muted">@comment.Email</span>
+                            </td>
+                            <td class="comment-cell">
+                                @if (comment.ParentId != null)
+                                {
+                                    <span class="muted">(reply) </span>
+                                }
+                                @(comment.Content.Length > 160 ? comment.Content[..160] + "…" : comment.Content)
+                            </td>
+                            <td>@Ui.DateTimeShort(comment.CreatedOnUtc)</td>
+                            <td>
+                                @if (comment.IsApproved)
+                                {
+                                    <span class="success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="error">No</span>
+                                }
+                            </td>
+                            <td class="actions">
+                                @if (comment.IsApproved)
+                                {
+                                    <button type="submit" name="single" value="disapprove:@comment.Id" class="link-btn">Disapprove</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" name="single" value="approve:@comment.Id" class="link-btn">Approve</button>
+                                }
+                                <button type="submit" name="single" value="delete:@comment.Id" class="link-btn"
+                                        onclick="return confirm('Delete this comment?');">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </form>
 </div>
+
+<script>
+    document.getElementById('check-all').addEventListener('change', function () {
+        document.querySelectorAll('.row-check').forEach(function (cb) { cb.checked = document.getElementById('check-all').checked; });
+    });
+</script>

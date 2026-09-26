@@ -103,3 +103,24 @@ SIGXFSZ on its 2 TiB JIT memory file. Set `DOTNET_EnableWriteXorExecute=0` to ru
 
 This repository ships the **.NET 10 edition** (`net10.0`, EF Core 10, admin UI in English) only.
 Older experimental editions are not part of this repo.
+
+## Deployment behind nginx (real visitor IPs)
+
+Reverse proxies hide the client IP: Kestrel only sees the proxy (e.g. `127.0.0.1`). The app
+ships with ForwardedHeaders configured to trust **IPv4/IPv6 loopback + private networks**,
+so a local nginx just needs to pass the standard headers:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:1001;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+With these headers, `Connection.RemoteIpAddress` (visitor stats, comment IPs, …) carries the
+real client address. If your proxy lives outside those ranges, add its address to
+`ForwardedHeadersOptions.KnownProxies` in `Program.cs`. Directly-exposed instances ignore
+forged `X-Forwarded-For` headers (untrusted sources are never accepted).

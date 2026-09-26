@@ -20,166 +20,182 @@ public static class DbInitializer
 
         db.Settings.AddRange(
             new Setting { Key = "SiteTitle", Value = "Cms.Studio" },
-            new Setting { Key = "SiteDescription", Value = "Notes on software, AI and technology — written for humans and machines." },
+            new Setting { Key = "SiteDescription", Value = "Real-time tech news on smartphones, computers and smart devices — written for humans and machines." },
             new Setting { Key = "SiteBaseUrl", Value = "https://example.com" },
             new Setting { Key = "PostsPerPage", Value = "10" },
             new Setting { Key = "AuthorName", Value = "Admin" });
 
-        var ai = new Category { Name = "AI", Slug = "ai", Description = "Artificial intelligence, LLMs and tooling.", ShowOnMenu = true, DisplayOrder = 1 };
-        var eng = new Category { Name = "Engineering", Slug = "engineering", Description = "Software engineering, architecture and performance.", ShowOnMenu = true, DisplayOrder = 2 };
-        db.Categories.AddRange(ai, eng);
+        var phones = new Category { Name = "Smartphones", Slug = "smartphones", Description = "Phones, chips, cameras and everything pocket-sized.", ShowOnMenu = true, DisplayOrder = 1 };
+        var computers = new Category { Name = "Computers", Slug = "computers", Description = "Laptops, desktops, GPUs and PC hardware.", ShowOnMenu = true, DisplayOrder = 2 };
+        var smart = new Category { Name = "Smart Devices", Slug = "smart-devices", Description = "Wearables, smart home, audio and connected gadgets.", ShowOnMenu = true, DisplayOrder = 3 };
+        db.Categories.AddRange(phones, computers, smart);
 
-        var series = new Series { Title = "Getting Started", Slug = "getting-started", Description = "A short tour of this site." };
+        var series = new Series { Title = "Fall Launch Season", Slug = "fall-launch-season", Description = "Coverage of the autumn hardware launches." };
         db.Series.Add(series);
         db.SaveChanges();
 
-        var welcome = new Post
+        var p1 = new Post
         {
-            Slug = "hello-world",
-            Title = "Hello, World",
-            Summary = "Welcome to Cms.Studio — a lightweight, AI-friendly publishing platform. This sample post shows how articles look and how they are exposed to search engines and LLM crawlers.",
+            Slug = "flagship-phone-camera-showdown",
+            Title = "Flagship Phone Camera Showdown: Night Mode Gets Real",
+            Summary = "We compared the latest flagship phone cameras after dark — bigger sensors, smarter processing, and the gap between them is finally shrinking.",
             ContentMd = """
-                # Hello, World
+                # Flagship Phone Camera Showdown: Night Mode Gets Real
 
-                Welcome to **Cms.Studio**. This site is built for writing in English and getting discovered — both by search engines and by AI assistants like ChatGPT.
+                This year's flagship phones all promise "DSLR-like" night shots. We took them outside after dark
+                to see who actually delivers.
 
-                ## What makes it AI-friendly?
+                ## What changed this generation
 
-                - Every article has a clean canonical URL: `/blog/hello-world`
-                - Raw Markdown is served at `/blog/hello-world.md`
-                - The whole site is summarised in [`llms.txt`](/llms.txt) and fully mirrored in [`llms-full.txt`](/llms-full.txt)
-                - Posts are structured with schema.org `BlogPosting` JSON-LD
-                - A standard [`sitemap.xml`](/sitemap.xml) and [RSS feed](/rss) are always up to date
+                - **Bigger sensors.** The main cameras now sit at 1/1.3" or larger, letting in noticeably more light.
+                - **Smarter processing.** Multi-frame stacking happens in under a second — no more tripod wobble.
+                - **Periscope zoom.** 5x optical is the new normal at the top end.
 
-                ## Markdown sample
+                ## The verdict
 
-                ```csharp
-                var greeting = "Hello from Cms.Studio!";
-                Console.WriteLine(greeting);
+                Daylight remains a coin flip, but in true low light the lead is now decided by processing
+                philosophy: one camp keeps it bright and clean, the other keeps it moody and realistic.
+
+                ```text
+                Night mode score (out of 100): 92 / 90 / 88 / 85
                 ```
 
-                Enjoy writing!
+                Pick the look you prefer — the hardware race has quietly become a taste question.
                 """,
             AuthorName = "Admin",
-            CategoryId = ai.Id,
-            CoverImageUrl = "https://picsum.photos/seed/cmsstudio-welcome/960/540",
+            CategoryId = phones.Id,
+            CoverImageUrl = "https://picsum.photos/seed/tech-phone/960/540",
             Status = PostStatus.Published,
             IsFixedTop = true,
             PublishedOnUtc = now,
             CreatedOnUtc = now
         };
-        var writing = new Post
+        var p2 = new Post
         {
-            Slug = "writing-for-humans-and-machines",
-            Title = "Writing for Humans and Machines",
-            Summary = "A quick guide to structuring English blog posts so that both readers and language models get the most out of them.",
+            Slug = "arm-laptops-battery-king",
+            Title = "ARM Laptops Are the New Battery Kings",
+            Summary = "The latest ARM-based laptops push past 20 hours of real-world battery life while finally keeping legacy apps happy.",
             ContentMd = """
-                # Writing for Humans and Machines
+                # ARM Laptops Are the New Battery Kings
 
-                Good technical writing serves two audiences today: human readers and the language models that index the web.
+                The newest generation of ARM laptops has crossed a psychological line: you can leave the charger
+                at home for a full work trip.
 
-                ## Principles
+                ## By the numbers
 
-                1. **Lead with the answer.** Put the key point in the first paragraph.
-                2. **Use descriptive headings.** They double as an outline for LLM summarisers.
-                3. **Prefer plain English.** Short sentences rank well and parse well.
-                4. **Link generously.** Internal links help crawlers; external links help readers.
+                | Workload | Battery life |
+                |---|---|
+                | Video playback | 22 h |
+                | Web + docs | 16 h |
+                | Compile-heavy dev | 9 h |
 
-                > Tip: keep summaries under 160 characters — they become your meta description.
+                ## Compatibility is no longer the catch
+
+                Translation layers now run almost everything at native speed, and the handful of legacy tools
+                that still misbehave are increasingly rare.
+
+                > Bottom line: if battery life tops your list, ARM is the safe pick today.
                 """,
             AuthorName = "Admin",
-            CategoryId = eng.Id,
-            CoverImageUrl = "https://picsum.photos/seed/cmsstudio-writing/960/540",
+            CategoryId = computers.Id,
+            CoverImageUrl = "https://picsum.photos/seed/tech-laptop/960/540",
             Status = PostStatus.Published,
             PublishedOnUtc = now.AddHours(-3),
             CreatedOnUtc = now.AddHours(-3)
         };
-        var images = new Post
+        var p3 = new Post
         {
-            Slug = "choosing-cover-images",
-            Title = "Choosing Cover Images That Work",
-            Summary = "Why every post deserves a cover image, how the homepage hero picks its stories, and what makes a thumbnail readable at 168 pixels.",
+            Slug = "smart-ring-wearables-2026",
+            Title = "Smart Rings Are Having Their Moment",
+            Summary = "Sleep tracking without a screen on your wrist: the smart ring category is growing up, and the data is getting genuinely useful.",
             ContentMd = """
-                # Choosing Cover Images That Work
+                # Smart Rings Are Having Their Moment
 
-                The homepage hero and the feed cards pick up the cover image of each post — either the explicit
-                cover URL or the first image inside the Markdown body.
+                Screenless wearables had a quiet year — then the smart ring category exploded.
 
-                ## Rules of thumb
+                ## Why a ring works
 
-                1. **Landscape beats portrait.** Cards crop to 3:2.
-                2. **Keep the subject centred.** The bottom third is covered by the title gradient.
-                3. **High contrast.** White text needs a dark lower edge.
+                1. **Sleep first.** No glowing screen waking you (or your partner) at 2 a.m.
+                2. **Weeks of battery.** Tiny cell, tiny draw — most rings last 5–7 days.
+                3. **Invisible data.** Recovery and readiness scores without notification fatigue.
 
-                ![A calm desk setup](https://picsum.photos/seed/cmsstudio-inline/960/540)
+                ![Smart ring on a desk](https://picsum.photos/seed/tech-ring/960/540)
+
+                The trade-off remains the same: no screen means you check your phone for everything.
                 """,
             AuthorName = "Admin",
-            CategoryId = eng.Id,
-            CoverImageUrl = "https://picsum.photos/seed/cmsstudio-covers/960/540",
+            CategoryId = smart.Id,
+            CoverImageUrl = "https://picsum.photos/seed/tech-ring/960/540",
             Status = PostStatus.Published,
             PublishedOnUtc = now.AddHours(-6),
             CreatedOnUtc = now.AddHours(-6)
         };
-        db.Posts.AddRange(welcome, writing, images);
+        db.Posts.AddRange(p1, p2, p3);
 
-        var noCoverA = new Post
+        var p4 = new Post
         {
-            Slug = "markdown-tips",
-            Title = "Small Markdown Tricks Worth Stealing",
-            Summary = "Tables, footnotes, task lists and fenced code — the handful of Markdown features that do most of the heavy lifting in technical posts.",
+            Slug = "usb-c-everything",
+            Title = "USB-C Everything: The Charger Drawer Finally Unifies",
+            Summary = "One cable to rule them all is no longer a meme — here is what actually fast-charges what.",
             ContentMd = """
-                # Small Markdown Tricks Worth Stealing
+                # USB-C Everything: The Charger Drawer Finally Unifies
 
-                - Task lists keep tutorials honest: `- [x] done`, `- [ ] todo`
-                - Tables beat screenshots for config options
-                - Fenced code with a language tag gives you syntax highlighting
+                - Phones, laptops, tablets and earbuds now share one connector
+                - The mess moved to labels: PD, PPS, Watts — here is the cheat sheet
+                - A 65W GaN brick covers almost every device in a travel bag
                 """,
             AuthorName = "Admin",
-            CategoryId = eng.Id,
+            CategoryId = smart.Id,
             Status = PostStatus.Published,
             PublishedOnUtc = now.AddHours(-9),
             CreatedOnUtc = now.AddHours(-9)
         };
-        var noCoverB = new Post
+        var p5 = new Post
         {
-            Slug = "llms-txt-explained",
-            Title = "llms.txt, Explained",
-            Summary = "What the llms.txt convention is, why this site serves llms-full.txt and raw Markdown, and how it helps AI assistants quote you correctly.",
+            Slug = "gpus-get-affordable",
+            Title = "Mid-Range GPUs Get Interesting Again",
+            Summary = "Competition is back in the mid-range: better rasterisation, better efficiency, and prices that make sense for 1440p gaming.",
             ContentMd = """
-                # llms.txt, Explained
+                # Mid-Range GPUs Get Interesting Again
 
-                `llms.txt` is a short, structured index of a site written for language models.
-                This site also mirrors every post as raw Markdown at `/blog/{slug}.md`.
+                After two noisy generations, the middle of the stack is where the interesting fight is happening.
 
-                ![A simple diagram](https://picsum.photos/seed/cmsstudio-llms/960/540)
+                - 1440p high-refresh is now the default target
+                - Power draw is down double digits across the board
+                - Upscaling quality finally survives motion
+
+                ![GPU close-up](https://picsum.photos/seed/tech-gpu/960/540)
                 """,
             AuthorName = "Admin",
-            CategoryId = ai.Id,
+            CategoryId = computers.Id,
+            CoverImageUrl = "https://picsum.photos/seed/tech-gpu/960/540",
             Status = PostStatus.Published,
             PublishedOnUtc = now.AddHours(-12),
             CreatedOnUtc = now.AddHours(-12)
         };
-        db.Posts.AddRange(noCoverA, noCoverB);
-        db.PostSeries.Add(new PostSeries { Post = welcome, Series = series, DisplayOrder = 1 });
+        db.Posts.AddRange(p4, p5);
+        db.PostSeries.Add(new PostSeries { Post = p1, Series = series, DisplayOrder = 1 });
+        db.PostSeries.Add(new PostSeries { Post = p2, Series = series, DisplayOrder = 2 });
 
-        var tagAi = new Tag { Name = "AI", Slug = "ai" };
-        var tagSeo = new Tag { Name = "SEO", Slug = "seo" };
-        var tagWriting = new Tag { Name = "Writing", Slug = "writing" };
-        db.Tags.AddRange(tagAi, tagSeo, tagWriting);
+        var tagPhones = new Tag { Name = "Phones", Slug = "phones" };
+        var tagLaptops = new Tag { Name = "Laptops", Slug = "laptops" };
+        var tagWearables = new Tag { Name = "Wearables", Slug = "wearables" };
+        var tagGpus = new Tag { Name = "GPUs", Slug = "gpus" };
+        db.Tags.AddRange(tagPhones, tagLaptops, tagWearables, tagGpus);
         db.SaveChanges();
 
         db.PostTags.AddRange(
-            new PostTag { PostId = welcome.Id, TagId = tagAi.Id },
-            new PostTag { PostId = welcome.Id, TagId = tagSeo.Id },
-            new PostTag { PostId = writing.Id, TagId = tagWriting.Id },
-            new PostTag { PostId = writing.Id, TagId = tagSeo.Id });
+            new PostTag { PostId = p1.Id, TagId = tagPhones.Id },
+            new PostTag { PostId = p2.Id, TagId = tagLaptops.Id },
+            new PostTag { PostId = p3.Id, TagId = tagWearables.Id },
+            new PostTag { PostId = p5.Id, TagId = tagGpus.Id });
 
         var c1 = new Comment
         {
-            PostId = welcome.Id,
+            PostId = p1.Id,
             NickName = "Alice",
             Email = "alice@example.com",
-            Content = "Great introduction — the llms.txt idea is neat. Looking forward to more posts!",
+            Content = "Great comparison — the night mode samples really show how different the processing philosophies are.",
             CreatedOnUtc = now,
             IsApproved = true
         };
@@ -188,20 +204,20 @@ public static class DbInitializer
 
         db.Comments.Add(new Comment
         {
-            PostId = welcome.Id,
+            PostId = p1.Id,
             ParentId = c1.Id,
             NickName = "Admin",
             Email = "admin@example.com",
-            Content = "Thanks Alice! Full-text Markdown mirrors make the site easy for LLMs to digest.",
+            Content = "Thanks! We will follow up with a video version of the same scene once the next update lands.",
             CreatedOnUtc = now.AddMinutes(20),
             IsApproved = true
         });
         db.Comments.Add(new Comment
         {
-            PostId = writing.Id,
+            PostId = p2.Id,
             NickName = "Bob",
             Email = "bob@example.com",
-            Content = "Point 3 is underrated - plain English really does help both readers and models.",
+            Content = "20+ hours of real battery is the point where I stop caring about carrying a charger. Count me in.",
             CreatedOnUtc = now.AddHours(-1),
             IsApproved = false
         });

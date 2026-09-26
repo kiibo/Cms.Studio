@@ -78,10 +78,9 @@ public class VisitTrackingMiddleware
 
     private static string? ResolveIp(HttpContext context)
     {
-        var forwarded = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(forwarded))
-            return forwarded.Split(',')[0].Trim();
-
+        // ForwardedHeaders middleware (Program.cs) has already rewritten RemoteIpAddress
+        // from X-Forwarded-For when the request came through a trusted proxy. Reading the
+        // header directly here would let anyone spoof their IP with a forged header.
         return context.Connection.RemoteIpAddress?.ToString();
     }
 
