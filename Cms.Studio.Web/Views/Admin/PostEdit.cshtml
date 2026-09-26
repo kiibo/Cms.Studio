@@ -63,6 +63,9 @@
                     }
                 </select>
             </label>
+            <label>Author (auto — signed-in user, not editable)
+                <input type="text" readonly value="@(string.IsNullOrWhiteSpace(Model.Post.AuthorName) ? User.Identity?.Name : Model.Post.AuthorName)" />
+            </label>
             <label>Cover image (shown in the homepage hero &amp; feed cards)</label>
             <div class="cover-upload">
                 <input type="hidden" name="Post.CoverImageUrl" id="cover-url" value="@Model.Post.CoverImageUrl" />

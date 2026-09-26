@@ -96,6 +96,11 @@ public class AdminPostsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int? id, AdminPostEditViewModel model)
     {
+        // Post.Category is a non-nullable navigation property that is never bound from the form
+        // (only CategoryId is). Drop its implicit "required" error — CategoryId is validated below.
+        // Without this, every save fails with "The Category field is required." and nothing persists.
+        ModelState.Remove("Post.Category");
+
         if (string.IsNullOrWhiteSpace(model.Post.Title))
             ModelState.AddModelError(string.Empty, "Title is required.");
         if (model.Post.CategoryId <= 0)
