@@ -91,6 +91,17 @@ public class BlogController : Controller
         if (!string.IsNullOrEmpty(ip))
             await _posts.SetFeedbackAsync(post.Id, ip, valuable);
 
+        // AJAX vote: return just the rating module so only that block refreshes.
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            var light = new PostViewModel
+            {
+                Post = post,
+                Feedback = await _posts.GetFeedbackAsync(post.Id, ip)
+            };
+            return PartialView("~/Views/Blog/_Feedback.cshtml", light);
+        }
+
         return Redirect($"/blog/{slug}#feedback");
     }
 

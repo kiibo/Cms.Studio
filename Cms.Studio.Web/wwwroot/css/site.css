@@ -158,11 +158,11 @@ code {
 
 /* ---------- layout ---------- */
 .page {
-    max-width: 1280px;
+    max-width: 1520px;
     margin: 26px auto;
     padding: 0 20px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 312px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     gap: 24px;
     align-items: start;
 }
@@ -177,7 +177,7 @@ code {
     font-size: 13px;
 }
 .announce-inner {
-    max-width: 1280px;
+    max-width: 1520px;
     margin: 0 auto;
     padding: 9px 20px;
     display: flex;
@@ -489,7 +489,7 @@ code {
 
 /* ---------- post page (mimo docs style: wide article + sticky TOC) ---------- */
 .breadcrumb {
-    max-width: 1320px;
+    max-width: 1520px;
     margin: 18px auto 14px;
     padding: 0 20px;
     font-size: 13px;
@@ -769,7 +769,7 @@ code {
     margin-top: 40px;
 }
 .footer-inner {
-    max-width: 1160px;
+    max-width: 1520px;
     margin: 0 auto;
     padding: 26px 20px;
     font-size: 13px;

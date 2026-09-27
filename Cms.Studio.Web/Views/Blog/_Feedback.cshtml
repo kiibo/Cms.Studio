@@ -1,0 +1,35 @@
+@model PostViewModel
+<div class="post-feedback" id="feedback">
+    <div class="fb-head">Was this article valuable?</div>
+    <div class="fb-rating">
+        <div class="stars" style="--pct: @(Model.Feedback.Stars * 20)%">
+            <span class="stars-base">★★★★★</span>
+            <span class="stars-fill">★★★★★</span>
+        </div>
+        <div class="fb-score">
+            @if (Model.Feedback.Total == 0)
+            {
+                <span class="muted">No ratings yet</span>
+            }
+            else
+            {
+                <strong>@Model.Feedback.Average.ToString("0.0")</strong><span class="muted"> / 5 · @Model.Feedback.Total vote@(Model.Feedback.Total == 1 ? "" : "s")</span>
+            }
+        </div>
+    </div>
+    <div class="fb-actions">
+        <form method="post" action="/blog/@Model.Post.Slug/feedback" class="inline fb-vote">
+            @Html.AntiForgeryToken()
+            <button type="submit" name="valuable" value="true" class="fb-btn fb-up @(Model.Feedback.MyVote == true ? "on" : "")">
+                👍 Valuable <span class="fb-count">@Model.Feedback.Valuable</span>
+            </button>
+        </form>
+        <form method="post" action="/blog/@Model.Post.Slug/feedback" class="inline fb-vote">
+            @Html.AntiForgeryToken()
+            <button type="submit" name="valuable" value="false" class="fb-btn fb-down @(Model.Feedback.MyVote == false ? "on" : "")">
+                👎 Not valuable <span class="fb-count">@Model.Feedback.NotValuable</span>
+            </button>
+        </form>
+    </div>
+    <p class="fb-hint">No account needed. Valuable counts 5 points, not valuable 1 point — stars show the average. The last click is the one that counts.</p>
+</div>

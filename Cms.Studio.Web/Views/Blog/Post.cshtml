@@ -53,40 +53,7 @@
     </footer>
 </article>
 
-<div class="post-feedback" id="feedback">
-    <div class="fb-head">Was this article valuable?</div>
-    <div class="fb-rating">
-        <div class="stars" style="--pct: @(Model.Feedback.Stars * 20)%">
-            <span class="stars-base">★★★★★</span>
-            <span class="stars-fill">★★★★★</span>
-        </div>
-        <div class="fb-score">
-            @if (Model.Feedback.Total == 0)
-            {
-                <span class="muted">No ratings yet</span>
-            }
-            else
-            {
-                <strong>@Model.Feedback.Average.ToString("0.0")</strong><span class="muted"> / 5 · @Model.Feedback.Total vote@(Model.Feedback.Total == 1 ? "" : "s")</span>
-            }
-        </div>
-    </div>
-    <div class="fb-actions">
-        <form method="post" action="/blog/@Model.Post.Slug/feedback" class="inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" name="valuable" value="true" class="fb-btn fb-up @(Model.Feedback.MyVote == true ? "on" : "")">
-                👍 Valuable <span class="fb-count">@Model.Feedback.Valuable</span>
-            </button>
-        </form>
-        <form method="post" action="/blog/@Model.Post.Slug/feedback" class="inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" name="valuable" value="false" class="fb-btn fb-down @(Model.Feedback.MyVote == false ? "on" : "")">
-                👎 Not valuable <span class="fb-count">@Model.Feedback.NotValuable</span>
-            </button>
-        </form>
-    </div>
-    <p class="fb-hint">No account needed. Valuable counts 5 points, not valuable 1 point — stars show the average. The last click is the one that counts.</p>
-</div>
+@await Html.PartialAsync("_Feedback", Model)
 
 <section class="comments" id="comments">
     <h2 class="section-heading">Comments (@Model.CommentCount)</h2>
@@ -191,4 +158,34 @@
         window.addEventListener('scroll', refresh, { passive: true });
         refresh();
     })();
+
+    // Feedback voting: update just the rating module instead of reloading the page.
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest && e.target.closest('form.fb-vote');
+        if (!form) return;
+        e.preventDefault();
+        const body = new FormData(form);
+        if (e.submitter && e.submitter.name) body.append(e.submitter.name, e.submitter.value);
+        fetch(form.action, {
+            method: 'POST',
+            body: body,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (r) {
+            if (!r.ok) throw new Error(r.status);
+            return r.text();
+        }).then(function (html) {
+            const el = document.getElementById('feedback');
+            if (el) el.outerHTML = html;
+        }).catch(function () {
+            // Fallback: plain navigation so voting never breaks without JS.
+            if (e.submitter && e.submitter.name) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = e.submitter.name;
+                hidden.value = e.submitter.value;
+                form.appendChild(hidden);
+            }
+            form.submit();
+        });
+    });
 </script>
