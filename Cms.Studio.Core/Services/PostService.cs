@@ -365,6 +365,74 @@ public class PostService
         }
         return candidate;
     }
+
+    // ---------- article value feedback (ithome-style, last click per IP wins) ----------
+
+    /// <summary>
+    /// Records a valuable / not-valuable click. One row per (post, IP); clicking again
+    /// replaces the previous choice, so the last click is the one that counts.
+    /// </summary>
+    public async Task SetFeedbackAsync(int postId, string ip, bool valuable)
+    {
+        if (ip.Length > 64)
+            ip = ip[..64];
+
+        var row = await _db.PostFeedback.FirstOrDefaultAsync(f => f.PostId == postId && f.Ip == ip);
+        if (row == null)
+        {
+            _db.PostFeedback.Add(new PostFeedback
+            {
+                PostId = postId,
+                Ip = ip,
+                IsValuable = valuable,
+                CreatedOnUtc = DateTime.UtcNow,
+                UpdatedOnUtc = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            row.IsValuable = valuable;
+            row.UpdatedOnUtc = DateTime.UtcNow;
+        }
+        await _db.SaveChangesAsync();
+    }
+
+    /// <summary>Feedback counts for a post plus the current visitor's own vote (if any).</summary>
+    public async Task<PostFeedbackSummary> GetFeedbackAsync(int postId, string? ip)
+    {
+        var q = _db.PostFeedback.AsNoTracking().Where(f => f.PostId == postId);
+        var valuable = await q.CountAsync(f => f.IsValuable);
+        var notValuable = await q.CountAsync(f => !f.IsValuable);
+        var total = valuable + notValuable;
+        // Scoring: valuable = 5 points, not valuable = 1 point. Stars show the average
+        // rounded to the nearest half star (4.6 -> 4.5 stars).
+        var average = total == 0 ? 0 : (valuable * 5.0 + notValuable) / total;
+        return new PostFeedbackSummary
+        {
+            Valuable = valuable,
+            NotValuable = notValuable,
+            Total = total,
+            Average = average,
+            Stars = Math.Round(average * 2, MidpointRounding.AwayFromZero) / 2,
+            MyVote = string.IsNullOrEmpty(ip)
+                ? null
+                : await q.Where(f => f.Ip == ip).Select(f => (bool?)f.IsValuable).FirstOrDefaultAsync()
+        };
+    }
+}
+
+/// <summary>Aggregated article value feedback for one post.</summary>
+public class PostFeedbackSummary
+{
+    public int Valuable { get; set; }
+    public int NotValuable { get; set; }
+    public int Total { get; set; }
+    /// <summary>Average score: valuable = 5, not valuable = 1.</summary>
+    public double Average { get; set; }
+    /// <summary>Average rounded to the nearest half star (0–5).</summary>
+    public double Stars { get; set; }
+    /// <summary>Current visitor's vote: true/false, or null when they haven't voted.</summary>
+    public bool? MyVote { get; set; }
 }
 
 public class RankItem

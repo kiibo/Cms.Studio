@@ -133,6 +133,20 @@ public class Setting
     public string Value { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Article value feedback (ithome-style): one row per (post, IP). Clicking again replaces
+/// the previous choice — the last click is the one that counts.
+/// </summary>
+public class PostFeedback
+{
+    public int Id { get; set; }
+    public int PostId { get; set; }
+    public string Ip { get; set; } = string.Empty;
+    public bool IsValuable { get; set; }
+    public DateTime CreatedOnUtc { get; set; }
+    public DateTime UpdatedOnUtc { get; set; }
+}
+
 /// <summary>Reader comment. Created unapproved (pending moderation), verified by email code.</summary>
 public class Comment
 {

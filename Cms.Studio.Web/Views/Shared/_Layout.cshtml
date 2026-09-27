@@ -7,6 +7,8 @@
     var isHome = Context.Request.Path.Value == "/";
     var q = Context.Request.Query["q"].ToString();
     var navCategories = await CategoryNavService.GetAllAsync(showHidden: false);
+    var latestFeed = await LatestPostService.GetFeedAsync(1, 1);
+    var latestPost = latestFeed.Items.Count > 0 ? latestFeed.Items[0] : null;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -40,6 +42,16 @@
     }
 </head>
 <body>
+    @if (latestPost != null)
+    {
+        <div class="announce">
+            <div class="announce-inner">
+                <span class="announce-badge">Latest</span>
+                <a href="/blog/@latestPost.Slug">@latestPost.Title</a>
+                <span class="announce-arrow">→</span>
+            </div>
+        </div>
+    }
     <header class="site-header">
         <div class="header-inner">
             <a class="site-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
@@ -61,11 +73,25 @@
         </div>
     </header>
 
-    <div class="page @(isHome ? "page-home" : "")">
+    <div class="page @(isHome ? "page-home" : "") @(ViewData["Toc"] != null ? "page-wide" : "")">
         <main class="main-col">
             @RenderBody()
         </main>
         <aside class="side-col">
+            @if (ViewData["Toc"] is List<Cms.Studio.Core.Services.TocItem> toc && toc.Count > 0)
+            {
+                <div class="toc-card side-toc">
+                    <h4 class="toc-title">On this page</h4>
+                    <ul class="toc-list">
+                        @foreach (var item in toc)
+                        {
+                            <li class="toc-l@(item.Level)">
+                                <a href="#@item.Anchor">@item.Text</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
             @await Component.InvokeAsync("Sidebar")
         </aside>
     </div>

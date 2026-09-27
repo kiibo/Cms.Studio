@@ -17,6 +17,7 @@ public class CmsDbContext : DbContext
     public DbSet<PostSeries> PostSeries => Set<PostSeries>();
     public DbSet<PostViewDaily> PostViewDaily => Set<PostViewDaily>();
     public DbSet<VisitRecord> VisitRecords => Set<VisitRecord>();
+    public DbSet<PostFeedback> PostFeedback => Set<PostFeedback>();
     public DbSet<SlugHistory> SlugHistory => Set<SlugHistory>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<Comment> Comments => Set<Comment>();
@@ -107,6 +108,15 @@ public class CmsDbContext : DbContext
             entity.Property(e => e.Referer).HasMaxLength(300);
             entity.HasIndex(e => e.VisitedOnUtc);
             entity.HasIndex(e => new { e.Ip, e.VisitedOnUtc });
+        });
+
+        builder.Entity<PostFeedback>(entity =>
+        {
+            entity.ToTable("PostFeedback");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Ip).HasMaxLength(64).IsRequired();
+            // One vote per (post, IP) — clicking again updates the existing row (last click wins).
+            entity.HasIndex(e => new { e.PostId, e.Ip }).IsUnique();
         });
 
         builder.Entity<SlugHistory>(entity =>

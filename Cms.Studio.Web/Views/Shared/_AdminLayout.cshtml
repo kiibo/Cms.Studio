@@ -1,3 +1,8 @@
+@{
+    var siteTitle = ViewData["Title"] as string ?? "Cms.Studio";
+    var path = Context.Request.Path.Value ?? string.Empty;
+    bool Active(string prefix) => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,25 +11,34 @@
     <title>@(ViewData["Title"] != null ? ViewData["Title"] + " — " : "")Cms.Studio Admin</title>
     <link rel="stylesheet" href="/css/site.css" />
 </head>
-<body class="admin-body">
-    <header class="admin-header">
-        <div class="header-inner">
-            <a class="site-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
-            <nav class="site-nav">
-                <a href="/admin/dashboard">Dashboard</a>
-                <a href="/admin/posts">Posts</a>
-                <a href="/admin/comments">Comments</a>
-                <a href="/admin/catalog/categories">Categories</a>
-                <a href="/admin/catalog/series">Series</a>
-                <a href="/admin/catalog/tags">Tags</a>
-                <a href="/admin/settings">Settings</a>
-                <a href="/" target="_blank">View site</a>
-                <a href="/admin/logout">Sign out</a>
+<body class="console-body">
+    <div class="console-shell">
+        <aside class="console-side">
+            <a class="console-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
+            <nav class="console-nav">
+                <a class="@(Active("/admin") && !Active("/admin/posts") && !Active("/admin/comments") && !Active("/admin/catalog") && !Active("/admin/settings") ? "on" : "")" href="/admin/dashboard">Dashboard</a>
+                <a class="@(Active("/admin/posts") ? "on" : "")" href="/admin/posts">Posts</a>
+                <a class="@(Active("/admin/comments") ? "on" : "")" href="/admin/comments">Comments</a>
+                <a class="@(Active("/admin/catalog/categories") ? "on" : "")" href="/admin/catalog/categories">Categories</a>
+                <a class="@(Active("/admin/catalog/series") ? "on" : "")" href="/admin/catalog/series">Series</a>
+                <a class="@(Active("/admin/catalog/tags") ? "on" : "")" href="/admin/catalog/tags">Tags</a>
+                <a class="@(Active("/admin/settings") ? "on" : "")" href="/admin/settings">Settings</a>
             </nav>
+            <div class="console-side-foot">
+                <a href="/" target="_blank">View site ↗</a>
+                <a href="/admin/logout">Sign out</a>
+            </div>
+        </aside>
+
+        <div class="console-main">
+            <header class="console-top">
+                <span class="console-crumb">Admin / @siteTitle</span>
+                <a class="console-user" href="/admin/settings">admin</a>
+            </header>
+            <main class="admin-main @(ViewData["Wide"] != null ? "admin-main-wide" : "")">
+                @RenderBody()
+            </main>
         </div>
-    </header>
-    <main class="admin-main @(ViewData["Wide"] != null ? "admin-main-wide" : "")">
-        @RenderBody()
-    </main>
+    </div>
 </body>
 </html>

@@ -1,10 +1,23 @@
 @model PostViewModel
+@{
+    var published = Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc;
+    var updated = Model.Post.ModifiedOnUtc ?? Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc;
+    ViewData["Toc"] = Model.Toc; // rendered by the layout in the sidebar (above Rankings)
+}
 
-<article class="post">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    <span class="bc-sep">/</span>
+    <a href="/category/@Model.Post.Category.Slug">@Model.Post.Category.Name</a>
+    <span class="bc-sep">/</span>
+    <span class="bc-current">@Model.Post.Title</span>
+</nav>
+
+<article class="post post-wide">
     <header class="post-header">
         <h1 class="post-title">@Model.Post.Title</h1>
         <div class="post-meta">
-            <time datetime="@Ui.Iso(Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc)">@Ui.DateTimeShort(Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc)</time>
+            <time datetime="@Ui.Iso(published)">@Ui.DateTimeShort(published)</time>
             <span class="dot">·</span>
             <a href="/category/@Model.Post.Category.Slug">@Model.Post.Category.Name</a>
             <span class="dot">·</span>
@@ -25,17 +38,55 @@
         @Html.Raw(Model.HtmlContent)
     </div>
 
-    @if (Model.Post.PostTags.Count > 0)
-    {
-        <div class="post-tags">
-            Tags:
-            @foreach (var pt in Model.Post.PostTags)
+    <footer class="post-foot">
+        <div class="post-updated">Last updated on <time datetime="@Ui.Iso(updated)">@Ui.Date(updated)</time></div>
+        @if (Model.Post.PostTags.Count > 0)
+        {
+            <div class="post-tags">
+                Tags:
+                @foreach (var pt in Model.Post.PostTags)
+                {
+                    <a href="/tag/@pt.Tag.Slug">@pt.Tag.Name</a>
+                }
+            </div>
+        }
+    </footer>
+</article>
+
+<div class="post-feedback" id="feedback">
+    <div class="fb-head">Was this article valuable?</div>
+    <div class="fb-rating">
+        <div class="stars" style="--pct: @(Model.Feedback.Stars * 20)%">
+            <span class="stars-base">★★★★★</span>
+            <span class="stars-fill">★★★★★</span>
+        </div>
+        <div class="fb-score">
+            @if (Model.Feedback.Total == 0)
             {
-                <a href="/tag/@pt.Tag.Slug">@pt.Tag.Name</a>
+                <span class="muted">No ratings yet</span>
+            }
+            else
+            {
+                <strong>@Model.Feedback.Average.ToString("0.0")</strong><span class="muted"> / 5 · @Model.Feedback.Total vote@(Model.Feedback.Total == 1 ? "" : "s")</span>
             }
         </div>
-    }
-</article>
+    </div>
+    <div class="fb-actions">
+        <form method="post" action="/blog/@Model.Post.Slug/feedback" class="inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" name="valuable" value="true" class="fb-btn fb-up @(Model.Feedback.MyVote == true ? "on" : "")">
+                👍 Valuable <span class="fb-count">@Model.Feedback.Valuable</span>
+            </button>
+        </form>
+        <form method="post" action="/blog/@Model.Post.Slug/feedback" class="inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" name="valuable" value="false" class="fb-btn fb-down @(Model.Feedback.MyVote == false ? "on" : "")">
+                👎 Not valuable <span class="fb-count">@Model.Feedback.NotValuable</span>
+            </button>
+        </form>
+    </div>
+    <p class="fb-hint">No account needed. Valuable counts 5 points, not valuable 1 point — stars show the average. The last click is the one that counts.</p>
+</div>
 
 <section class="comments" id="comments">
     <h2 class="section-heading">Comments (@Model.CommentCount)</h2>
@@ -123,3 +174,21 @@
         </ul>
     </section>
 }
+
+<script>
+    // Scrollspy: highlight the section currently in view (sidebar TOC).
+    (function () {
+        const links = Array.from(document.querySelectorAll('.toc-list a'));
+        const targets = links.map(a => document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)))).filter(Boolean);
+        if (targets.length === 0) return;
+
+        function refresh() {
+            let active = 0;
+            const y = window.scrollY + 120;
+            targets.forEach((t, i) => { if (t.offsetTop <= y) active = i; });
+            links.forEach((a, i) => a.classList.toggle('toc-active', i === active));
+        }
+        window.addEventListener('scroll', refresh, { passive: true });
+        refresh();
+    })();
+</script>

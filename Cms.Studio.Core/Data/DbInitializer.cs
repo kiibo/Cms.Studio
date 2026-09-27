@@ -190,6 +190,13 @@ public static class DbInitializer
             new PostTag { PostId = p3.Id, TagId = tagWearables.Id },
             new PostTag { PostId = p5.Id, TagId = tagGpus.Id });
 
+        db.PostFeedback.AddRange(
+            new PostFeedback { PostId = p1.Id, Ip = "203.0.113.10", IsValuable = true, CreatedOnUtc = now, UpdatedOnUtc = now },
+            new PostFeedback { PostId = p1.Id, Ip = "203.0.113.11", IsValuable = true, CreatedOnUtc = now, UpdatedOnUtc = now },
+            new PostFeedback { PostId = p1.Id, Ip = "203.0.113.12", IsValuable = false, CreatedOnUtc = now, UpdatedOnUtc = now },
+            new PostFeedback { PostId = p2.Id, Ip = "203.0.113.10", IsValuable = true, CreatedOnUtc = now, UpdatedOnUtc = now },
+            new PostFeedback { PostId = p2.Id, Ip = "203.0.113.13", IsValuable = true, CreatedOnUtc = now, UpdatedOnUtc = now });
+
         var c1 = new Comment
         {
             PostId = p1.Id,

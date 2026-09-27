@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Markdig;
+using Markdig.Extensions.AutoIdentifiers;
 
 namespace Cms.Studio.Core.Services;
 
@@ -9,11 +10,56 @@ public class ContentService
 {
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseAutoIdentifiers(AutoIdentifierOptions.GitHub)
         .Build();
+
+    private static readonly Regex Heading = new("<h(?<level>[23])[^>]*id=\"(?<id>[^\"]+)\"[^>]*>(?<text>.*?)</h[23]>", RegexOptions.Compiled | RegexOptions.Singleline);
+    private static readonly Regex StandaloneImage = new(@"<p>(<img\b[^>]*/?>)</p>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex ImgAlt = new("alt=\"(?<alt>[^\"]*)\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public string ToHtml(string markdown)
     {
-        return string.IsNullOrWhiteSpace(markdown) ? string.Empty : Markdown.ToHtml(markdown, Pipeline);
+        if (string.IsNullOrWhiteSpace(markdown))
+            return string.Empty;
+
+        var html = Markdown.ToHtml(markdown, Pipeline);
+        return FigureImages(html);
+    }
+
+    /// <summary>
+    /// Wraps standalone images in &lt;figure&gt; with a caption from the alt text —
+    /// the "图文并茂" look: image blocks with captions instead of bare inline images.
+    /// </summary>
+    public string FigureImages(string html)
+    {
+        return StandaloneImage.Replace(html, m =>
+        {
+            var img = m.Groups[1].Value;
+            var alt = ImgAlt.Match(img);
+            var caption = alt.Success ? alt.Groups["alt"].Value.Trim() : string.Empty;
+            return caption.Length == 0
+                ? $"<figure class=\"content-figure\">{img}</figure>"
+                : $"<figure class=\"content-figure\">{img}<figcaption>{caption}</figcaption></figure>";
+        });
+    }
+
+    /// <summary>Builds a table of contents from the rendered HTML headings (for the side navigation).</summary>
+    public List<TocItem> ExtractToc(string html)
+    {
+        var toc = new List<TocItem>();
+        foreach (Match m in Heading.Matches(html))
+        {
+            var text = Regex.Replace(m.Groups["text"].Value, "<[^>]+>", string.Empty).Trim();
+            if (text.Length == 0)
+                continue;
+            toc.Add(new TocItem
+            {
+                Level = int.Parse(m.Groups["level"].Value),
+                Text = text,
+                Anchor = m.Groups["id"].Value
+            });
+        }
+        return toc;
     }
 
     /// <summary>ASCII slug: lowercase, alphanumeric words joined by dashes. Falls back to "post" when empty.</summary>
@@ -58,6 +104,16 @@ public class ContentService
             .Take(20)
             .ToList();
     }
+}
+
+/// <summary>One entry of the article table of contents.</summary>
+public class TocItem
+{
+    /// <summary>2 for H2, 3 for H3.</summary>
+    public int Level { get; set; }
+    public string Text { get; set; } = string.Empty;
+    /// <summary>Heading anchor id.</summary>
+    public string Anchor { get; set; } = string.Empty;
 }
 
 /// <summary>Minimal paging metadata shared by list views.</summary>

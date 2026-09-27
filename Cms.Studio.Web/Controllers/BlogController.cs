@@ -78,6 +78,22 @@ public class BlogController : Controller
     /// code and re-render the page keeping every entered value) and "post" (validate the
     /// code and create the comment awaiting moderation).
     /// </summary>
+    /// <summary>Article value feedback (ithome-style). No login; one vote per IP, last click wins.</summary>
+    [HttpPost("/blog/{slug}/feedback")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Feedback(string slug, bool valuable)
+    {
+        var post = await _posts.GetBySlugAsync(slug);
+        if (post == null)
+            return NotFound();
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (!string.IsNullOrEmpty(ip))
+            await _posts.SetFeedbackAsync(post.Id, ip, valuable);
+
+        return Redirect($"/blog/{slug}#feedback");
+    }
+
     [HttpPost("/blog/{slug}/comment")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitComment(string slug, CommentFormModel form, string action)
@@ -162,10 +178,13 @@ public class BlogController : Controller
             comments.Add(node);
         }
 
+        var html = _content.ToHtml(post.ContentMd);
         return new PostViewModel
         {
             Post = post,
-            HtmlContent = _content.ToHtml(post.ContentMd),
+            HtmlContent = html,
+            Toc = _content.ExtractToc(html),
+            Feedback = await _posts.GetFeedbackAsync(post.Id, HttpContext.Connection.RemoteIpAddress?.ToString()),
             Related = await _posts.GetRelatedAsync(post, 3),
             Comments = comments,
             CommentCount = all.Count,

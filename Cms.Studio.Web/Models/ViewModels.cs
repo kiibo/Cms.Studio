@@ -17,6 +17,10 @@ public class PostViewModel
     public Post Post { get; set; } = null!;
     public string HtmlContent { get; set; } = string.Empty;
     public List<Post> Related { get; set; } = new();
+    /// <summary>Table of contents extracted from the rendered headings.</summary>
+    public List<TocItem> Toc { get; set; } = new();
+    /// <summary>Article value feedback (ithome-style).</summary>
+    public PostFeedbackSummary Feedback { get; set; } = new();
 
     // ---------- comments ----------
     public List<CommentViewModel> Comments { get; set; } = new();
