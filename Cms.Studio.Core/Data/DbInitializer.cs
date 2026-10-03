@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Cms.Studio.Core.Domain;
 
@@ -12,6 +16,7 @@ public static class DbInitializer
         var db = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
 
         db.Database.EnsureCreated();
+        ReconcileSchema(db);
 
         if (db.Posts.Any())
             return;
@@ -231,4 +236,126 @@ public static class DbInitializer
 
         db.SaveChanges();
     }
+
+    // ---- schema reconciliation -------------------------------------------------
+    // EnsureCreated() only builds a database that does not exist yet; it never alters
+    // an existing one. A local file created by an older build can therefore be missing
+    // newer tables / columns, which surfaces later as "no such table" / "no such column"
+    // (e.g. when the admin dashboard queries the visitor-analytics tables). Reconcile the
+    // schema non-destructively: create whatever is missing, never drop or rewrite data.
+    private static void ReconcileSchema(CmsDbContext db)
+    {
+        try
+        {
+            EnsureMissingTables(db);
+            EnsureMissingColumns(db);
+        }
+        catch
+        {
+            // Introspection / DDL helpers can be unavailable for some providers. The
+            // fresh-database path is already handled by EnsureCreated() above, so an
+            // unusual provider must never block startup here.
+        }
+    }
+
+    private static void EnsureMissingTables(CmsDbContext db)
+    {
+        var creator = db.GetInfrastructure().GetRequiredService<IRelationalDatabaseCreator>();
+        var script = creator.GenerateCreateScript();
+        foreach (var raw in script.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var stmt = MakeIdempotent(raw);
+            if (stmt is null) continue;
+            try
+            {
+                db.Database.ExecuteSqlRaw(stmt);
+            }
+            catch
+            {
+                // One statement (e.g. an index on a column not yet added) may fail; keep
+                // going so the remaining missing objects are still created.
+            }
+        }
+    }
+
+    /// <summary>Turns a generated CREATE statement into a CREATE ... IF NOT EXISTS one,
+    /// or returns null for anything that is not a table / index creation.</summary>
+    private static string? MakeIdempotent(string raw)
+    {
+        // Drop leading blank / comment lines that can follow a previous statement.
+        var lines = raw.Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0 && !l.StartsWith("--"))
+            .ToArray();
+        var s = string.Join(" ", lines).Trim();
+        if (s.Length == 0) return null;
+
+        foreach (var kw in new[] { "CREATE TABLE ", "CREATE UNIQUE INDEX ", "CREATE INDEX " })
+        {
+            if (s.StartsWith(kw, StringComparison.OrdinalIgnoreCase))
+                return s.Substring(0, kw.Length) + "IF NOT EXISTS " + s.Substring(kw.Length);
+        }
+        return null;
+    }
+
+    private static void EnsureMissingColumns(CmsDbContext db)
+    {
+        foreach (var entity in db.Model.GetEntityTypes())
+        {
+            var table = entity.GetTableName();
+            if (string.IsNullOrEmpty(table)) continue;
+            var storeObj = StoreObjectIdentifier.Table(table, entity.GetSchema());
+
+            var existing = ReadExistingColumns(db, table!);
+            foreach (var prop in entity.GetProperties())
+            {
+                var column = prop.GetColumnName(storeObj);
+                if (string.IsNullOrEmpty(column) || existing.Contains(column!)) continue;
+
+                var colType = prop.GetColumnType() ?? "TEXT";
+                var ddl = $"ALTER TABLE \"{Escape(table!)}\" ADD COLUMN \"{Escape(column!)}\" {colType}";
+                if (!prop.IsColumnNullable(storeObj))
+                    ddl += $" NOT NULL DEFAULT {DefaultLiteral(prop)}";
+                try
+                {
+                    db.Database.ExecuteSqlRaw(ddl);
+                }
+                catch
+                {
+                    // Adding an individual column can fail on exotic constraints; skip it.
+                }
+            }
+        }
+    }
+
+    private static HashSet<string> ReadExistingColumns(CmsDbContext db, string table)
+    {
+        var cols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var conn = db.Database.GetDbConnection();
+        var wasClosed = conn.State != System.Data.ConnectionState.Open;
+        if (wasClosed) conn.Open();
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"PRAGMA table_info(\"{Escape(table)}\")";
+            using var rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+                cols.Add(rdr.GetString(rdr.GetOrdinal("name")));
+        }
+        finally
+        {
+            if (wasClosed) conn.Close();
+        }
+        return cols;
+    }
+
+    private static string DefaultLiteral(IProperty prop)
+    {
+        var t = prop.ClrType;
+        if (t == typeof(string)) return "''";
+        if (t == typeof(DateTime) || t == typeof(DateTimeOffset)) return "''";
+        return "0"; // bool + numerics
+    }
+
+    private static string Escape(string id) => id.Replace("\"", "\"\"");
 }
