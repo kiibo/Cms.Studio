@@ -130,6 +130,15 @@ code {
 }
 .site-nav a:hover { color: var(--accent); background: rgba(33, 88, 243, 0.08); }
 
+.nav-ic {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 7px;
+    flex: 0 0 auto;
+    opacity: 0.92;
+}
+.nav-ic-svg { display: block; }
+
 /* rank entries live in the nav on mobile (sidebar hides) */
 .nav-rank-group { display: none; gap: 6px; }
 .nav-rank {

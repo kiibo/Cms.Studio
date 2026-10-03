@@ -48,6 +48,30 @@ public static class Ui
             m = HtmlImage.Match(post.ContentMd);
         return m.Success ? m.Groups["url"].Value : null;
     }
+
+    // ---- inline nav icons (gizmodo-style, self-hosted SVG, no icon-font/CDN) ----
+    private static string Ico(string inner) =>
+        "<svg class='nav-ic-svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>" + inner + "</svg>";
+
+    /// <summary>Section icon for a nav item, keyed by category slug or a fixed key
+    /// (home / daily / weekly / monthly). Unknown keys fall back to a neutral icon.</summary>
+    public static string NavIcon(string? key) => (key ?? "").Trim().ToLowerInvariant() switch
+    {
+        "home" => Ico("<path d='M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'/><path d='M9 21v-6h6v6'/>") ,
+        "smartphones" or "smartphone" or "phones" or "phone" or "mobile" or "mobiles" =>
+            Ico("<rect x='6' y='2' width='12' height='20' rx='2.5'/><line x1='11' y1='18.5' x2='13' y2='18.5'/>") ,
+        "computers" or "computer" or "laptops" or "laptop" or "pcs" or "pc" or "desktop" or "desktops" =>
+            Ico("<rect x='3' y='4' width='18' height='12' rx='2'/><line x1='2' y1='20' x2='22' y2='20'/>") ,
+        "smart-devices" or "smartdevices" or "devices" or "wearables" or "watch" or "watches" or "gadgets" =>
+            Ico("<rect x='7' y='6' width='10' height='12' rx='3'/><path d='M9 6V3h6v3M9 18v3h6v-3'/>") ,
+        "daily" or "daily-top" or "hot" or "trending" =>
+            Ico("<path d='M12 2c1 3 4 4.5 4 8a4 4 0 0 1-8 0c0-1 .3-2 .8-2.8C9 8.2 8.5 9.6 8.5 11a3.5 3.5 0 1 0 7 0c0-3-2-5-3.5-9z'/>") ,
+        "weekly" or "weekly-top" =>
+            Ico("<rect x='3' y='4' width='18' height='18' rx='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/>") ,
+        "monthly" or "monthly-top" or "top" or "award" =>
+            Ico("<circle cx='12' cy='8' r='6'/><polyline points='8.2 13.9 7 22.5 12 19.5 17 22.5 15.8 13.9'/>") ,
+        _ => Ico("<line x1='4' y1='9' x2='20' y2='9'/><line x1='4' y1='15' x2='20' y2='15'/><line x1='10' y1='3' x2='8' y2='21'/><line x1='16' y1='3' x2='14' y2='21'/>")
+    };
 }
 
 /// <summary>schema.org JSON-LD builders for rich results and LLM understanding.</summary>

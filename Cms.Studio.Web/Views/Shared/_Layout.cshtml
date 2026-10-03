@@ -62,15 +62,15 @@
             </button>
             <div class="header-menu" id="header-menu">
                 <nav class="site-nav" aria-label="Main">
-                    <a href="/">Home</a>
+                    <a href="/"><span class="nav-ic">@Html.Raw(Ui.NavIcon("home"))</span>Home</a>
                     @foreach (var category in navCategories)
                     {
-                        <a href="/category/@category.Slug">@category.Name</a>
+                        <a href="/category/@category.Slug"><span class="nav-ic">@Html.Raw(Ui.NavIcon(category.Slug))</span>@category.Name</a>
                     }
                     <span class="nav-rank-group">
-                        <a class="nav-rank" href="/rank/daily">Daily Top</a>
-                        <a class="nav-rank" href="/rank/weekly">Weekly Top</a>
-                        <a class="nav-rank" href="/rank/monthly">Monthly Top</a>
+                        <a class="nav-rank" href="/rank/daily"><span class="nav-ic">@Html.Raw(Ui.NavIcon("daily"))</span>Daily Top</a>
+                        <a class="nav-rank" href="/rank/weekly"><span class="nav-ic">@Html.Raw(Ui.NavIcon("weekly"))</span>Weekly Top</a>
+                        <a class="nav-rank" href="/rank/monthly"><span class="nav-ic">@Html.Raw(Ui.NavIcon("monthly"))</span>Monthly Top</a>
                     </span>
                 </nav>
                 <form class="search-form" action="/search" method="get" role="search">
