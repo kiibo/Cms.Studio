@@ -15,18 +15,25 @@
     <div class="console-shell">
         <aside class="console-side">
             <a class="console-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
-            <nav class="console-nav">
-                <a class="@(Active("/admin") && !Active("/admin/posts") && !Active("/admin/comments") && !Active("/admin/catalog") && !Active("/admin/settings") ? "on" : "")" href="/admin/dashboard">Dashboard</a>
-                <a class="@(Active("/admin/posts") ? "on" : "")" href="/admin/posts">Posts</a>
-                <a class="@(Active("/admin/comments") ? "on" : "")" href="/admin/comments">Comments</a>
-                <a class="@(Active("/admin/catalog/categories") ? "on" : "")" href="/admin/catalog/categories">Categories</a>
-                <a class="@(Active("/admin/catalog/series") ? "on" : "")" href="/admin/catalog/series">Series</a>
-                <a class="@(Active("/admin/catalog/tags") ? "on" : "")" href="/admin/catalog/tags">Tags</a>
-                <a class="@(Active("/admin/settings") ? "on" : "")" href="/admin/settings">Settings</a>
-            </nav>
-            <div class="console-side-foot">
-                <a href="/" target="_blank">View site ↗</a>
-                <a href="/admin/logout">Sign out</a>
+            <button class="nav-toggle console-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="console-menu">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <div class="console-menu" id="console-menu">
+                <nav class="console-nav">
+                    <a class="@(Active("/admin") && !Active("/admin/posts") && !Active("/admin/comments") && !Active("/admin/catalog") && !Active("/admin/settings") ? "on" : "")" href="/admin/dashboard">Dashboard</a>
+                    <a class="@(Active("/admin/posts") ? "on" : "")" href="/admin/posts">Posts</a>
+                    <a class="@(Active("/admin/comments") ? "on" : "")" href="/admin/comments">Comments</a>
+                    <a class="@(Active("/admin/catalog/categories") ? "on" : "")" href="/admin/catalog/categories">Categories</a>
+                    <a class="@(Active("/admin/catalog/series") ? "on" : "")" href="/admin/catalog/series">Series</a>
+                    <a class="@(Active("/admin/catalog/tags") ? "on" : "")" href="/admin/catalog/tags">Tags</a>
+                    <a class="@(Active("/admin/settings") ? "on" : "")" href="/admin/settings">Settings</a>
+                </nav>
+                <div class="console-side-foot">
+                    <a href="/" target="_blank">View site ↗</a>
+                    <a href="/admin/logout">Sign out</a>
+                </div>
             </div>
         </aside>
 
@@ -40,5 +47,29 @@
             </main>
         </div>
     </div>
+    <script>
+        (function () {
+            var side = document.querySelector('.console-side');
+            var toggle = document.querySelector('.console-toggle');
+            if (!side || !toggle) return;
+            function setOpen(open) {
+                side.classList.toggle('nav-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(!side.classList.contains('nav-open'));
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
+            });
+            document.addEventListener('click', function (e) {
+                if (!side.contains(e.target)) setOpen(false);
+            });
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 900) setOpen(false);
+            });
+        })();
+    </script>
 </body>
 </html>

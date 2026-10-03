@@ -55,21 +55,28 @@
     <header class="site-header">
         <div class="header-inner">
             <a class="site-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
-            <nav class="site-nav" aria-label="Main">
-                <a href="/">Home</a>
-                @foreach (var category in navCategories)
-                {
-                    <a href="/category/@category.Slug">@category.Name</a>
-                }
-                <span class="nav-rank-group">
-                    <a class="nav-rank" href="/rank/daily">Daily Top</a>
-                    <a class="nav-rank" href="/rank/weekly">Weekly Top</a>
-                    <a class="nav-rank" href="/rank/monthly">Monthly Top</a>
-                </span>
-            </nav>
-            <form class="search-form" action="/search" method="get" role="search">
-                <input type="search" name="q" value="@q" placeholder="Search..." aria-label="Search" />
-            </form>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="header-menu">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <div class="header-menu" id="header-menu">
+                <nav class="site-nav" aria-label="Main">
+                    <a href="/">Home</a>
+                    @foreach (var category in navCategories)
+                    {
+                        <a href="/category/@category.Slug">@category.Name</a>
+                    }
+                    <span class="nav-rank-group">
+                        <a class="nav-rank" href="/rank/daily">Daily Top</a>
+                        <a class="nav-rank" href="/rank/weekly">Weekly Top</a>
+                        <a class="nav-rank" href="/rank/monthly">Monthly Top</a>
+                    </span>
+                </nav>
+                <form class="search-form" action="/search" method="get" role="search">
+                    <input type="search" name="q" value="@q" placeholder="Search..." aria-label="Search" />
+                </form>
+            </div>
         </div>
     </header>
 
@@ -109,5 +116,29 @@
         </div>
     </footer>
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        (function () {
+            var inner = document.querySelector('.header-inner');
+            var toggle = document.querySelector('.nav-toggle');
+            if (!inner || !toggle) return;
+            function setOpen(open) {
+                inner.classList.toggle('nav-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(!inner.classList.contains('nav-open'));
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
+            });
+            document.addEventListener('click', function (e) {
+                if (!inner.contains(e.target)) setOpen(false);
+            });
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 900) setOpen(false);
+            });
+        })();
+    </script>
 </body>
 </html>

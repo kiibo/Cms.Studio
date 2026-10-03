@@ -156,6 +156,46 @@ code {
     width: 220px;
 }
 
+/* header menu wrapper: holds the nav + search; inline on desktop,
+   collapsible panel on mobile (see the responsive section below) */
+.header-menu {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* hamburger button — only shown on small screens */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 42px;
+    height: 40px;
+    padding: 8px 9px;
+    margin-left: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.nav-toggle:hover { border-color: var(--accent); }
+.nav-toggle-bar {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ink);
+    transition: transform 0.22s ease, opacity 0.15s ease;
+}
+/* animate to an X when the menu is open */
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
 /* ---------- layout ---------- */
 .page {
     max-width: 1520px;
@@ -810,6 +850,13 @@ code {
     color: var(--ink);
     padding: 4px 8px 16px;
 }
+/* menu wrapper: column on desktop, collapsible panel on mobile */
+.console-menu {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
 .console-nav { display: flex; flex-direction: column; gap: 2px; }
 .console-nav a {
     padding: 9px 12px;
@@ -1155,31 +1202,83 @@ form label.check input { width: auto; margin: 0; }
 @media (max-width: 900px) {
     .page { grid-template-columns: minmax(0, 1fr); }
     .side-col { display: none; }
-    /* ranking entries move into the nav bar on mobile */
-    .nav-rank-group { display: flex; }
     .edit-grid { grid-template-columns: minmax(0, 1fr); }
-    .header-inner { padding: 10px 14px; }
-    .search-form { order: 3; width: 100%; }
+    /* --- collapsible mobile header menu --- */
+    .header-inner { padding: 10px 14px; gap: 12px; }
+    .nav-toggle { display: flex; }
+    .header-menu {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        margin-top: 2px;
+        padding: 8px 0 6px;
+        border-top: 1px solid var(--line-soft);
+    }
+    .header-inner.nav-open .header-menu { display: flex; }
+    .site-nav {
+        flex: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+    }
+    .site-nav a {
+        display: flex;
+        align-items: center;
+        min-height: 44px;              /* comfortable tap target */
+        padding: 11px 12px;
+        font-size: 15px;
+        border-radius: 10px;
+    }
+    /* ranking entries move into the nav on mobile (sidebar hides) */
+    .nav-rank-group { display: flex; flex-direction: column; gap: 2px; }
+    .search-form { width: 100%; margin-top: 8px; }
     .search-form input, .search-form input:focus { width: 100%; }
     .post { padding: 24px 20px; }
     .post-title { font-size: 26px; }
     .breadcrumb { margin-top: 12px; }
     .admin-card { padding: 18px 16px; }
     .admin-card.narrow { margin: 20px auto; }
-    /* console: sidebar becomes a horizontal scroller */
+    /* console: sidebar collapses behind a hamburger on mobile */
     .console-side {
         position: static;
         width: 100%;
         flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
         gap: 10px;
         padding: 10px 14px;
-        overflow-x: auto;
     }
     .console-brand { padding: 0 8px 0 0; flex: 0 0 auto; }
-    .console-nav { flex-direction: row; gap: 4px; }
-    .console-nav a { white-space: nowrap; padding: 7px 11px; }
-    .console-side-foot { display: none; }
+    .console-toggle { display: flex; }
+    .console-menu {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 2px;
+        margin-top: 2px;
+        padding: 8px 0 6px;
+        border-top: 1px solid var(--line-soft);
+    }
+    .console-side.nav-open .console-menu { display: flex; }
+    .console-nav { flex-direction: column; gap: 2px; }
+    .console-nav a {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 11px 12px;
+        white-space: normal;
+    }
+    .console-side-foot {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line-soft);
+    }
+    .console-side-foot a { display: flex; align-items: center; min-height: 44px; }
     .console-shell { flex-direction: column; }
     .console-main { margin-left: 0; }
     .console-top { padding: 0 16px; }
