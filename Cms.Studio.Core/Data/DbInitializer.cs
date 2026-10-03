@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Cms.Studio.Core.Domain;
 
@@ -14,6 +15,16 @@ public static class DbInitializer
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
+
+        // A malformed SQLite file (e.g. a WAL-mode database copied without its -wal/-shm
+        // siblings, or one left behind by an unclean shutdown) makes every query throw
+        // "database disk image is malformed". Detect that up front and rebuild the file.
+        if (!IsDatabaseHealthy(db))
+            RebuildDatabase(db);
+
+        // Keep the database single-file and portable (no WAL siblings) so a checked-out /
+        // downloaded .db can never hit the WAL-recovery "malformed" path.
+        TrySetPortableJournalMode(db);
 
         db.Database.EnsureCreated();
         ReconcileSchema(db);
@@ -355,6 +366,92 @@ public static class DbInitializer
         if (t == typeof(string)) return "''";
         if (t == typeof(DateTime) || t == typeof(DateTimeOffset)) return "''";
         return "0"; // bool + numerics
+    }
+
+    // ---- corruption resilience -------------------------------------------------
+    // Opening a damaged SQLite file throws SQLITE_CORRUPT ("database disk image is
+    // malformed"). We cannot repair that file, but we can detect it and rebuild a fresh,
+    // seeded database so the site starts instead of crashing on every request.
+    private static bool IsDatabaseHealthy(CmsDbContext db)
+    {
+        try
+        {
+            var conn = db.Database.GetDbConnection();
+            var wasClosed = conn.State != System.Data.ConnectionState.Open;
+            if (wasClosed) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "PRAGMA quick_check";
+                var result = cmd.ExecuteScalar();
+                return string.Equals(result?.ToString(), "ok", StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (wasClosed) conn.Close();
+            }
+        }
+        catch
+        {
+            // Opening / checking threw => treat as unhealthy (corrupt or unreadable).
+            return false;
+        }
+    }
+
+    private static void RebuildDatabase(CmsDbContext db)
+    {
+        try
+        {
+            db.Database.EnsureDeleted();
+        }
+        catch
+        {
+            // EnsureDeleted() can itself throw on a badly corrupted file; fall through to
+            // deleting the files directly.
+        }
+
+        try
+        {
+            var path = new SqliteConnectionStringBuilder(db.Database.GetConnectionString()).DataSource;
+            if (!string.IsNullOrEmpty(path))
+            {
+                foreach (var f in new[] { path, path + "-wal", path + "-shm", path + "-journal" })
+                {
+                    if (System.IO.File.Exists(f)) System.IO.File.Delete(f);
+                }
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup; EnsureCreated() will recreate whatever is missing.
+        }
+    }
+
+    /// <summary>Switch to the rollback-journal (single-file) journal mode. WAL keeps recent
+    /// transactions in separate -wal/-shm files; if a WAL database is copied or checked out
+    /// without those siblings it opens as "database disk image is malformed".</summary>
+    private static void TrySetPortableJournalMode(CmsDbContext db)
+    {
+        try
+        {
+            var conn = db.Database.GetDbConnection();
+            var wasClosed = conn.State != System.Data.ConnectionState.Open;
+            if (wasClosed) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "PRAGMA journal_mode = DELETE";
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (wasClosed) conn.Close();
+            }
+        }
+        catch
+        {
+            // Non-SQLite providers or a locked file: ignore, this is only a portability aid.
+        }
     }
 
     private static string Escape(string id) => id.Replace("\"", "\"\"");
