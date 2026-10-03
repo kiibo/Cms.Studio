@@ -1203,20 +1203,35 @@ form label.check input { width: auto; margin: 0; }
     .page { grid-template-columns: minmax(0, 1fr); }
     .side-col { display: none; }
     .edit-grid { grid-template-columns: minmax(0, 1fr); }
-    /* --- collapsible mobile header menu --- */
+    /* --- gizmodo-style slide-out drawer (mobile) --- */
     .header-inner { padding: 10px 14px; gap: 12px; }
-    .nav-toggle { display: flex; }
+    /* Drop the header blur on mobile: backdrop-filter creates a containing block for
+       the fixed-position drawer, trapping it inside the header box. Solid bg instead. */
+    .site-header {
+        z-index: 50;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: #fff;
+    }
+    .nav-toggle { display: flex; z-index: 3; }
     .header-menu {
-        display: none;
-        width: 100%;
+        position: fixed;
+        top: 60px; right: 0; bottom: 0;
+        width: min(330px, 86vw);
+        z-index: 2;
         flex-direction: column;
         align-items: stretch;
         gap: 2px;
-        margin-top: 2px;
-        padding: 8px 0 6px;
-        border-top: 1px solid var(--line-soft);
+        padding: 12px 16px 28px;
+        background: #fff;
+        border-left: 1px solid var(--line-soft);
+        box-shadow: -18px 0 44px rgba(15, 20, 35, 0.14);
+        transform: translateX(100%);
+        visibility: hidden;
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.32s;
+        overflow-y: auto;
     }
-    .header-inner.nav-open .header-menu { display: flex; }
+    body.nav-open .header-menu { transform: translateX(0); visibility: visible; }
     .site-nav {
         flex: none;
         flex-direction: column;
@@ -1226,15 +1241,22 @@ form label.check input { width: auto; margin: 0; }
     .site-nav a {
         display: flex;
         align-items: center;
-        min-height: 44px;              /* comfortable tap target */
-        padding: 11px 12px;
+        min-height: 46px;
+        padding: 12px 12px;
         font-size: 15px;
+        font-weight: 600;
         border-radius: 10px;
     }
     /* ranking entries move into the nav on mobile (sidebar hides) */
     .nav-rank-group { display: flex; flex-direction: column; gap: 2px; }
-    .search-form { width: 100%; margin-top: 8px; }
+    .search-form { width: 100%; margin: 2px 0 12px; order: -1; }
     .search-form input, .search-form input:focus { width: 100%; }
+    .nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 20, 35, 0.42);
+        z-index: 40;
+    }
     .post { padding: 24px 20px; }
     .post-title { font-size: 26px; }
     .breadcrumb { margin-top: 12px; }

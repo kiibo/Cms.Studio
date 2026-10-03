@@ -79,6 +79,7 @@
             </div>
         </div>
     </header>
+    <div class="nav-overlay" hidden></div>
 
     <div class="page @(isHome ? "page-home" : "") @(ViewData["Toc"] != null ? "page-wide" : "")">
         <main class="main-col">
@@ -118,22 +119,25 @@
     @await RenderSectionAsync("Scripts", required: false)
     <script>
         (function () {
-            var inner = document.querySelector('.header-inner');
             var toggle = document.querySelector('.nav-toggle');
-            if (!inner || !toggle) return;
+            var overlay = document.querySelector('.nav-overlay');
+            if (!toggle) return;
             function setOpen(open) {
-                inner.classList.toggle('nav-open', open);
+                document.body.classList.toggle('nav-open', open);
                 toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (overlay) {
+                    if (open) overlay.removeAttribute('hidden');
+                    else overlay.setAttribute('hidden', '');
+                }
+                document.body.style.overflow = open ? 'hidden' : '';
             }
             toggle.addEventListener('click', function (e) {
                 e.stopPropagation();
-                setOpen(!inner.classList.contains('nav-open'));
+                setOpen(!document.body.classList.contains('nav-open'));
             });
+            if (overlay) overlay.addEventListener('click', function () { setOpen(false); });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') setOpen(false);
-            });
-            document.addEventListener('click', function (e) {
-                if (!inner.contains(e.target)) setOpen(false);
             });
             window.addEventListener('resize', function () {
                 if (window.innerWidth > 900) setOpen(false);
