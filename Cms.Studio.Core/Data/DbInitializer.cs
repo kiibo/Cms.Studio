@@ -258,7 +258,10 @@ public static class DbInitializer
     {
         try
         {
-            EnsureMissingTables(db);
+            // Only run the create-script reconcile when a table is actually missing; on a
+            // healthy database this keeps startup quiet (no redundant CREATE INDEX noise).
+            if (FindMissingTables(db).Count > 0)
+                EnsureMissingTables(db);
             EnsureMissingColumns(db);
         }
         catch
@@ -267,6 +270,38 @@ public static class DbInitializer
             // fresh-database path is already handled by EnsureCreated() above, so an
             // unusual provider must never block startup here.
         }
+    }
+
+    private static List<string> FindMissingTables(CmsDbContext db)
+    {
+        var modelTables = db.Model.GetEntityTypes()
+            .Select(e => e.GetTableName())
+            .Where(t => !string.IsNullOrEmpty(t))
+            .Select(t => t!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var conn = db.Database.GetDbConnection();
+        var wasClosed = conn.State != System.Data.ConnectionState.Open;
+        if (wasClosed) conn.Open();
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            if (conn is SqliteConnection)
+                cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+            else
+                cmd.CommandText = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE()";
+            using var rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+                existing.Add(rdr.GetString(0));
+        }
+        finally
+        {
+            if (wasClosed) conn.Close();
+        }
+
+        return modelTables.Where(t => !existing.Contains(t)).ToList();
     }
 
     private static void EnsureMissingTables(CmsDbContext db)
@@ -301,16 +336,20 @@ public static class DbInitializer
         var s = string.Join(" ", lines).Trim();
         if (s.Length == 0) return null;
 
-        foreach (var kw in new[] { "CREATE TABLE ", "CREATE UNIQUE INDEX ", "CREATE INDEX " })
-        {
-            if (s.StartsWith(kw, StringComparison.OrdinalIgnoreCase))
-                return s.Substring(0, kw.Length) + "IF NOT EXISTS " + s.Substring(kw.Length);
-        }
+        // Only CREATE TABLE gets IF NOT EXISTS (valid on SQLite / MySQL / PostgreSQL).
+        // CREATE INDEX runs as-is and any "already exists" error is skipped below, because
+        // CREATE INDEX IF NOT EXISTS is not valid on MySQL.
+        if (s.StartsWith("CREATE TABLE ", StringComparison.OrdinalIgnoreCase))
+            return "CREATE TABLE IF NOT EXISTS " + s.Substring("CREATE TABLE ".Length);
+        if (s.StartsWith("CREATE UNIQUE INDEX ", StringComparison.OrdinalIgnoreCase) ||
+            s.StartsWith("CREATE INDEX ", StringComparison.OrdinalIgnoreCase))
+            return s;
         return null;
     }
 
     private static void EnsureMissingColumns(CmsDbContext db)
     {
+        var helper = db.GetInfrastructure().GetRequiredService<ISqlGenerationHelper>();
         foreach (var entity in db.Model.GetEntityTypes())
         {
             var table = entity.GetTableName();
@@ -324,7 +363,7 @@ public static class DbInitializer
                 if (string.IsNullOrEmpty(column) || existing.Contains(column!)) continue;
 
                 var colType = prop.GetColumnType() ?? "TEXT";
-                var ddl = $"ALTER TABLE \"{Escape(table!)}\" ADD COLUMN \"{Escape(column!)}\" {colType}";
+                var ddl = $"ALTER TABLE {helper.DelimitIdentifier(table!)} ADD COLUMN {helper.DelimitIdentifier(column!)} {colType}";
                 if (!prop.IsColumnNullable(storeObj))
                     ddl += $" NOT NULL DEFAULT {DefaultLiteral(prop)}";
                 try
@@ -348,10 +387,14 @@ public static class DbInitializer
         try
         {
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = $"PRAGMA table_info(\"{Escape(table)}\")";
+            bool sqlite = conn is SqliteConnection;
+            if (sqlite)
+                cmd.CommandText = $"PRAGMA table_info(\"{Escape(table)}\")";
+            else
+                cmd.CommandText = $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table.Replace("'", "''")}'";
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
-                cols.Add(rdr.GetString(rdr.GetOrdinal("name")));
+                cols.Add(sqlite ? rdr.GetString(rdr.GetOrdinal("name")) : rdr.GetString(0));
         }
         finally
         {
@@ -368,12 +411,18 @@ public static class DbInitializer
         return "0"; // bool + numerics
     }
 
+    private static bool IsSqlite(CmsDbContext db) => db.Database.GetDbConnection() is SqliteConnection;
+
     // ---- corruption resilience -------------------------------------------------
     // Opening a damaged SQLite file throws SQLITE_CORRUPT ("database disk image is
     // malformed"). We cannot repair that file, but we can detect it and rebuild a fresh,
     // seeded database so the site starts instead of crashing on every request.
     private static bool IsDatabaseHealthy(CmsDbContext db)
     {
+        // "database disk image is malformed" is a SQLite file-level problem (usually a WAL
+        // database copied without its -wal/-shm siblings). Server engines don't have it, so
+        // skip the check there and never auto-rebuild a server database.
+        if (!IsSqlite(db)) return true;
         try
         {
             var conn = db.Database.GetDbConnection();
@@ -400,6 +449,7 @@ public static class DbInitializer
 
     private static void RebuildDatabase(CmsDbContext db)
     {
+        if (!IsSqlite(db)) return; // never drop a server database automatically
         try
         {
             db.Database.EnsureDeleted();
@@ -432,6 +482,7 @@ public static class DbInitializer
     /// without those siblings it opens as "database disk image is malformed".</summary>
     private static void TrySetPortableJournalMode(CmsDbContext db)
     {
+        if (!IsSqlite(db)) return;
         try
         {
             var conn = db.Database.GetDbConnection();
