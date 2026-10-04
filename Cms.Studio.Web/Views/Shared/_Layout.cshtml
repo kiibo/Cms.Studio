@@ -4,11 +4,13 @@
     var canonicalUrl = ViewData["CanonicalUrl"] as string ?? "/";
     var ogImage = ViewData["OgImage"] as string;
     var jsonLd = ViewData["JsonLd"] as string;
-    var isHome = Context.Request.Path.Value == "/";
+    var currentPath = Context.Request.Path.Value ?? "/";
+    var isHome = currentPath == "/";
     var q = Context.Request.Query["q"].ToString();
     var navCategories = await CategoryNavService.GetAllAsync(showHidden: false);
     var latestFeed = await LatestPostService.GetFeedAsync(1, 1);
     var latestPost = latestFeed.Items.Count > 0 ? latestFeed.Items[0] : null;
+    string NavOn(string prefix) => currentPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? "on" : "";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -62,19 +64,22 @@
             </button>
             <div class="header-menu" id="header-menu">
                 <nav class="site-nav" aria-label="Main">
-                    <a href="/"><span class="nav-ic">@Html.Raw(Ui.NavIcon("home"))</span>Home</a>
+                    <a class="@(isHome ? "on" : "")" href="/"><span class="nav-ic">@Html.Raw(Ui.NavIcon("home"))</span>Home</a>
                     @foreach (var category in navCategories)
                     {
-                        <a href="/category/@category.Slug"><span class="nav-ic">@Html.Raw(Ui.NavIcon(category.Slug))</span>@category.Name</a>
+                        <a class="@NavOn($"/category/{category.Slug}")" href="/category/@category.Slug"><span class="nav-ic">@Html.Raw(Ui.NavIcon(category.Slug))</span>@category.Name</a>
                     }
                     <span class="nav-rank-group">
-                        <a class="nav-rank" href="/rank/daily"><span class="nav-ic">@Html.Raw(Ui.NavIcon("daily"))</span>Daily Top</a>
-                        <a class="nav-rank" href="/rank/weekly"><span class="nav-ic">@Html.Raw(Ui.NavIcon("weekly"))</span>Weekly Top</a>
-                        <a class="nav-rank" href="/rank/monthly"><span class="nav-ic">@Html.Raw(Ui.NavIcon("monthly"))</span>Monthly Top</a>
+                        <a class="nav-rank @NavOn("/rank/daily")" href="/rank/daily"><span class="nav-ic">@Html.Raw(Ui.NavIcon("daily"))</span>Daily Top</a>
+                        <a class="nav-rank @NavOn("/rank/weekly")" href="/rank/weekly"><span class="nav-ic">@Html.Raw(Ui.NavIcon("weekly"))</span>Weekly Top</a>
+                        <a class="nav-rank @NavOn("/rank/monthly")" href="/rank/monthly"><span class="nav-ic">@Html.Raw(Ui.NavIcon("monthly"))</span>Monthly Top</a>
                     </span>
                 </nav>
                 <form class="search-form" action="/search" method="get" role="search">
                     <input type="search" name="q" value="@q" placeholder="Search..." aria-label="Search" />
+                    <button class="search-go" type="submit" aria-label="Search">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+                    </button>
                 </form>
             </div>
         </div>

@@ -28,10 +28,14 @@
         <input type="hidden" name="keyword" value="@keyword" />
 
         <div class="bulk-bar">
-            <button type="submit" name="bulkAction" value="approve" class="btn">Approve selected</button>
+            <button type="submit" name="bulkAction" value="approve" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Approve selected
+            </button>
             <button type="submit" name="bulkAction" value="disapprove" class="btn secondary">Disapprove selected</button>
-            <button type="submit" name="bulkAction" value="delete" class="btn secondary"
+            <button type="submit" name="bulkAction" value="delete" class="btn danger"
                     onclick="return confirm('Delete the selected comments?');">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                 Delete selected
             </button>
         </div>
@@ -51,7 +55,7 @@
                         <th>Comment</th>
                         <th>Created on</th>
                         <th>Approved</th>
-                        <th>Actions</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,25 +81,29 @@
                             <td>
                                 @if (comment.IsApproved)
                                 {
-                                    <span class="success">Yes</span>
+                                    <span class="pill pill-ok">Approved</span>
                                 }
                                 else
                                 {
-                                    <span class="error">No</span>
+                                    <span class="pill pill-warn">Pending</span>
                                 }
                             </td>
                             <td class="actions">
                                 @if (comment.IsApproved)
                                 {
-                                    <button type="submit" name="single" value="disapprove:@comment.Id" class="link-btn">Disapprove</button>
+                                    <button type="submit" name="single" value="disapprove:@comment.Id" class="icon-btn warn" title="Disapprove" aria-label="Disapprove comment">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                    </button>
                                 }
                                 else
                                 {
-                                    <button type="submit" name="single" value="approve:@comment.Id" class="link-btn">Approve</button>
+                                    <button type="submit" name="single" value="approve:@comment.Id" class="icon-btn ok" title="Approve" aria-label="Approve comment">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </button>
                                 }
-                                <button type="submit" name="single" value="delete:@comment.Id" class="link-btn"
+                                <button type="submit" name="single" value="delete:@comment.Id" class="icon-btn danger" title="Delete" aria-label="Delete comment"
                                         onclick="return confirm('Delete this comment?');">
-                                    Delete
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                 </button>
                             </td>
                         </tr>

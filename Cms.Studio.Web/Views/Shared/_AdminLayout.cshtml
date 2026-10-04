@@ -22,13 +22,16 @@
             </button>
             <div class="console-menu" id="console-menu">
                 <nav class="console-nav">
-                    <a class="@(Active("/admin") && !Active("/admin/posts") && !Active("/admin/comments") && !Active("/admin/catalog") && !Active("/admin/settings") ? "on" : "")" href="/admin/dashboard">Dashboard</a>
-                    <a class="@(Active("/admin/posts") ? "on" : "")" href="/admin/posts">Posts</a>
-                    <a class="@(Active("/admin/comments") ? "on" : "")" href="/admin/comments">Comments</a>
-                    <a class="@(Active("/admin/catalog/categories") ? "on" : "")" href="/admin/catalog/categories">Categories</a>
-                    <a class="@(Active("/admin/catalog/series") ? "on" : "")" href="/admin/catalog/series">Series</a>
-                    <a class="@(Active("/admin/catalog/tags") ? "on" : "")" href="/admin/catalog/tags">Tags</a>
-                    <a class="@(Active("/admin/settings") ? "on" : "")" href="/admin/settings">Settings</a>
+                    <span class="console-group">Manage</span>
+                    <a class="@(Active("/admin") && !Active("/admin/posts") && !Active("/admin/comments") && !Active("/admin/catalog") && !Active("/admin/settings") ? "on" : "")" href="/admin/dashboard"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("dashboard"))</span>Dashboard</a>
+                    <a class="@(Active("/admin/posts") ? "on" : "")" href="/admin/posts"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("posts"))</span>Posts</a>
+                    <a class="@(Active("/admin/comments") ? "on" : "")" href="/admin/comments"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("comments"))</span>Comments</a>
+                    <span class="console-group">Catalog</span>
+                    <a class="@(Active("/admin/catalog/categories") ? "on" : "")" href="/admin/catalog/categories"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("categories"))</span>Categories</a>
+                    <a class="@(Active("/admin/catalog/series") ? "on" : "")" href="/admin/catalog/series"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("series"))</span>Series</a>
+                    <a class="@(Active("/admin/catalog/tags") ? "on" : "")" href="/admin/catalog/tags"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("tags"))</span>Tags</a>
+                    <span class="console-group">System</span>
+                    <a class="@(Active("/admin/settings") ? "on" : "")" href="/admin/settings"><span class="nav-ic">@Html.Raw(Ui.AdminIcon("settings"))</span>Settings</a>
                 </nav>
                 <div class="console-side-foot">
                     <a href="/" target="_blank">View site ↗</a>
@@ -47,6 +50,7 @@
             </main>
         </div>
     </div>
+    @await RenderSectionAsync("Scripts", required: false)
     <script>
         (function () {
             var side = document.querySelector('.console-side');

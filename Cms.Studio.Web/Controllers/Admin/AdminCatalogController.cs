@@ -23,9 +23,11 @@ public class AdminCatalogController : Controller
     // ---------- categories ----------
 
     [HttpGet("categories")]
-    public async Task<IActionResult> Categories()
+    public async Task<IActionResult> Categories(int? editId)
     {
-        ViewBag.Categories = await _categories.GetAllAsync();
+        var categories = await _categories.GetAllAsync();
+        ViewBag.Categories = categories;
+        ViewBag.Edit = editId != null ? categories.FirstOrDefault(c => c.Id == editId.Value) : null;
         return View("~/Views/Admin/Categories.cshtml");
     }
 
@@ -66,9 +68,11 @@ public class AdminCatalogController : Controller
     // ---------- series ----------
 
     [HttpGet("series")]
-    public async Task<IActionResult> SeriesList()
+    public async Task<IActionResult> SeriesList(int? editId)
     {
-        ViewBag.Series = await _series.GetAllAsync();
+        var series = await _series.GetAllAsync();
+        ViewBag.Series = series;
+        ViewBag.Edit = editId != null ? series.FirstOrDefault(s => s.Id == editId.Value) : null;
         return View("~/Views/Admin/Series.cshtml");
     }
 
