@@ -46,22 +46,31 @@ Comment moderation: `/admin/comments` (Pending / All, Approve / Delete).
 
 ```jsonc
 "DataProvider": {
-  "ProviderName": "Sqlite",                       // SqlServer | MySql | PostgreSQL | Sqlite
-  "ConnectionString": "Data Source=cmsstudio.db"
+  "ProviderName": "MySql",                         // SqlServer | MySql | PostgreSQL | Sqlite
+  "ConnectionString": "Server=localhost;Port=3306;Database=cmsstudio;User Id=root;Password=your_password;CharSet=utf8mb4",
+  "CharacterSet": "utf8mb4",                       // used when the database is auto-created
+  "Collation": "utf8mb4_unicode_ci"
 }
 ```
 
-MySQL example:
+**MySQL is the production default.** Startup runs a nopCommerce-style bootstrap
+(`DatabaseBootstrapper` / `DbInitializer`):
 
-```jsonc
-"DataProvider": {
-  "ProviderName": "MySql",
-  "ConnectionString": "Server=localhost;Database=cmsstudio;User=root;Password=***;AllowUserVariables=true"
-}
-```
+1. **Creates the database** named in the connection string when it does not exist yet —
+   `CREATE DATABASE IF NOT EXISTS ... CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+   (charset / collation from `CharacterSet` / `Collation`) — and waits until the fresh
+   database accepts connections before anything else runs.
+2. **Writes the table structure** with `EnsureCreated()`, then non-destructively reconciles
+   whatever an older build may be missing (extra tables / columns are added, nothing is
+   dropped or rewritten).
+3. **Seeds** default settings and sample content on the very first run.
 
-The .NET 10 edition uses Oracle's `MySql.EntityFrameworkCore` provider (10.x) — Pomelo has not shipped
-an EF Core 10 release yet.
+The configured account needs the `CREATE` privilege once; afterwards the app runs with
+normal DML rights. A pre-created database works too — just point the connection string at
+it. SQLite stays available for zero-config local development
+(`"ProviderName": "Sqlite"` / `"ConnectionString": "Data Source=cmsstudio.db"`), and
+SQL Server / PostgreSQL get the same auto-create treatment via their "master" / "postgres"
+maintenance connections.
 
 ## URL map
 
@@ -87,12 +96,19 @@ Cms.Studio.Web    MVC controllers + Razor views (public + admin, all in English)
 
 ## Verified
 
-- `dotnet build` passes (`.NET 10`)
+- `dotnet build` passes warning-free (`.NET 10`)
 - Smoke tests: all public endpoints, all admin endpoints, the sign-in flow, and the full comment flow
   (send code → verify → pending → approve) pass
+- **MySQL 8.0 end-to-end**: pointing `appsettings.json` at a running MySQL server where `cmsstudio`
+  does **not** exist yet → the database is auto-created with `utf8mb4` / `utf8mb4_unicode_ci`, all 12
+  tables and the sample seed are written on first run, and the site answers 200 immediately.
+  Also verified: an empty pre-created database receives the full schema, a dropped table / column is
+  healed on the next start without re-seeding, and both `mysql_native_password` and
+  `caching_sha2_password` accounts work (as does SQLite).
 
-> Schema note: the demo database is created with `EnsureCreated`. After pulling a version with new tables,
-> delete `Cms.Studio.Web/cmsstudio.db` and it will be recreated with the new schema and fresh sample data.
+> Schema note: the schema is created with `EnsureCreated` + startup reconciliation, so newer tables /
+> columns are added automatically. For SQLite, deleting `Cms.Studio.Web/cmsstudio.db` still resets the
+> demo database to fresh sample data.
 
 ## Environment note
 

@@ -14,7 +14,12 @@ public static class DbInitializer
     public static void Initialize(IServiceProvider services)
     {
         using var scope = services.CreateScope();
+        var settings = scope.ServiceProvider.GetService<DataProviderSettings>() ?? new DataProviderSettings();
         var db = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
+
+        // nopCommerce-style bootstrap: when the database named in the connection string does
+        // not exist yet, create it (charset / collation included) before any schema work runs.
+        DatabaseBootstrapper.CreateDatabaseIfNotExists(db, settings);
 
         // A malformed SQLite file (e.g. a WAL-mode database copied without its -wal/-shm
         // siblings, or one left behind by an unclean shutdown) makes every query throw
@@ -26,8 +31,9 @@ public static class DbInitializer
         // downloaded .db can never hit the WAL-recovery "malformed" path.
         TrySetPortableJournalMode(db);
 
+        // EnsureCreated() writes the full table structure on a fresh (or empty) database.
         db.Database.EnsureCreated();
-        ReconcileSchema(db);
+        ReconcileSchema(db, settings.ProviderKind);
 
         if (db.Posts.Any())
             return;
@@ -254,15 +260,15 @@ public static class DbInitializer
     // newer tables / columns, which surfaces later as "no such table" / "no such column"
     // (e.g. when the admin dashboard queries the visitor-analytics tables). Reconcile the
     // schema non-destructively: create whatever is missing, never drop or rewrite data.
-    private static void ReconcileSchema(CmsDbContext db)
+    private static void ReconcileSchema(CmsDbContext db, DataProviderKind kind)
     {
         try
         {
             // Only run the create-script reconcile when a table is actually missing; on a
             // healthy database this keeps startup quiet (no redundant CREATE INDEX noise).
-            if (FindMissingTables(db).Count > 0)
+            if (FindMissingTables(db, kind).Count > 0)
                 EnsureMissingTables(db);
-            EnsureMissingColumns(db);
+            EnsureMissingColumns(db, kind);
         }
         catch
         {
@@ -272,7 +278,7 @@ public static class DbInitializer
         }
     }
 
-    private static List<string> FindMissingTables(CmsDbContext db)
+    private static List<string> FindMissingTables(CmsDbContext db, DataProviderKind kind)
     {
         var modelTables = db.Model.GetEntityTypes()
             .Select(e => e.GetTableName())
@@ -288,10 +294,14 @@ public static class DbInitializer
         try
         {
             using var cmd = conn.CreateCommand();
-            if (conn is SqliteConnection)
-                cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
-            else
-                cmd.CommandText = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE()";
+            cmd.CommandText = kind switch
+            {
+                DataProviderKind.Sqlite => "SELECT name FROM sqlite_master WHERE type='table'",
+                DataProviderKind.PostgreSql => "SELECT tablename FROM pg_tables WHERE schemaname = current_schema()",
+                DataProviderKind.SqlServer => "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'",
+                // MySQL: DATABASE() is the schema the connection string points at
+                _ => "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE()"
+            };
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
                 existing.Add(rdr.GetString(0));
@@ -347,7 +357,7 @@ public static class DbInitializer
         return null;
     }
 
-    private static void EnsureMissingColumns(CmsDbContext db)
+    private static void EnsureMissingColumns(CmsDbContext db, DataProviderKind kind)
     {
         var helper = db.GetInfrastructure().GetRequiredService<ISqlGenerationHelper>();
         foreach (var entity in db.Model.GetEntityTypes())
@@ -356,7 +366,7 @@ public static class DbInitializer
             if (string.IsNullOrEmpty(table)) continue;
             var storeObj = StoreObjectIdentifier.Table(table, entity.GetSchema());
 
-            var existing = ReadExistingColumns(db, table!);
+            var existing = ReadExistingColumns(db, table!, kind);
             foreach (var prop in entity.GetProperties())
             {
                 var column = prop.GetColumnName(storeObj);
@@ -365,7 +375,14 @@ public static class DbInitializer
                 var colType = prop.GetColumnType() ?? "TEXT";
                 var ddl = $"ALTER TABLE {helper.DelimitIdentifier(table!)} ADD COLUMN {helper.DelimitIdentifier(column!)} {colType}";
                 if (!prop.IsColumnNullable(storeObj))
-                    ddl += $" NOT NULL DEFAULT {DefaultLiteral(prop)}";
+                {
+                    // MySQL refuses DEFAULT values on TEXT/BLOB/JSON columns; those get
+                    // the engine's implicit empty value instead.
+                    if (TakesImplicitDefault(colType))
+                        ddl += " NOT NULL";
+                    else
+                        ddl += $" NOT NULL DEFAULT {DefaultLiteral(prop, kind)}";
+                }
                 try
                 {
                     db.Database.ExecuteSqlRaw(ddl);
@@ -378,7 +395,7 @@ public static class DbInitializer
         }
     }
 
-    private static HashSet<string> ReadExistingColumns(CmsDbContext db, string table)
+    private static HashSet<string> ReadExistingColumns(CmsDbContext db, string table, DataProviderKind kind)
     {
         var cols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var conn = db.Database.GetDbConnection();
@@ -387,11 +404,16 @@ public static class DbInitializer
         try
         {
             using var cmd = conn.CreateCommand();
-            bool sqlite = conn is SqliteConnection;
-            if (sqlite)
-                cmd.CommandText = $"PRAGMA table_info(\"{Escape(table)}\")";
-            else
-                cmd.CommandText = $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table.Replace("'", "''")}'";
+            bool sqlite = kind == DataProviderKind.Sqlite;
+            var escapedTable = table.Replace("'", "''");
+            cmd.CommandText = kind switch
+            {
+                DataProviderKind.Sqlite => $"PRAGMA table_info(\"{Escape(table)}\")",
+                DataProviderKind.PostgreSql => $"SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '{escapedTable}'",
+                DataProviderKind.SqlServer => $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = DB_NAME() AND TABLE_NAME = '{escapedTable}'",
+                // MySQL: DATABASE() keeps the lookup on the configured schema
+                _ => $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{escapedTable}'"
+            };
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
                 cols.Add(sqlite ? rdr.GetString(rdr.GetOrdinal("name")) : rdr.GetString(0));
@@ -403,12 +425,24 @@ public static class DbInitializer
         return cols;
     }
 
-    private static string DefaultLiteral(IProperty prop)
+    private static string DefaultLiteral(IProperty prop, DataProviderKind kind)
     {
         var t = prop.ClrType;
         if (t == typeof(string)) return "''";
-        if (t == typeof(DateTime) || t == typeof(DateTimeOffset)) return "''";
+        if (t == typeof(DateTime) || t == typeof(DateTimeOffset))
+            // MySQL rejects an empty-string default on DATETIME columns (strict mode).
+            return kind == DataProviderKind.MySql ? "'1000-01-01 00:00:00'" : "''";
         return "0"; // bool + numerics
+    }
+
+    /// <summary>MySQL TEXT/BLOB/JSON columns cannot carry a DEFAULT clause.</summary>
+    private static bool TakesImplicitDefault(string colType)
+    {
+        var t = colType.Trim().ToLowerInvariant();
+        return t.StartsWith("text") || t.StartsWith("tinytext") || t.StartsWith("mediumtext") ||
+               t.StartsWith("longtext") || t.StartsWith("blob") || t.StartsWith("tinyblob") ||
+               t.StartsWith("mediumblob") || t.StartsWith("longblob") || t.StartsWith("json") ||
+               t.StartsWith("geometry");
     }
 
     private static bool IsSqlite(CmsDbContext db) => db.Database.GetDbConnection() is SqliteConnection;
