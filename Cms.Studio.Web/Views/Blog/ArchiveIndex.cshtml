@@ -1,15 +1,31 @@
+@using Cms.Studio.Core.Services
 @model ListViewModel
 
 <section class="feed">
     <h1 class="section-heading">Archive</h1>
     <p class="section-desc">All posts by month.</p>
-    <ul class="archive-list">
-        @foreach (var month in (List<Cms.Studio.Core.Services.ArchiveMonth>)ViewBag.Months)
-        {
-            <li>
+
+    @if (((List<ArchiveGroup>)ViewBag.Groups).Count == 0)
+    {
+        <p class="muted">No posts yet.</p>
+    }
+
+    @foreach (var month in (List<ArchiveGroup>)ViewBag.Groups)
+    {
+        <div class="archive-month">
+            <h2 class="archive-month-heading">
                 <a href="/archive/@month.Year/@month.Month">@(new DateTime(month.Year, month.Month, 1).ToString("MMMM yyyy"))</a>
                 <span class="muted">(@month.Count)</span>
-            </li>
-        }
-    </ul>
+            </h2>
+            <ul class="archive-posts">
+                @foreach (var entry in month.Entries)
+                {
+                    <li>
+                        <time class="archive-date" datetime="@entry.PublishedOnUtc.ToString("yyyy-MM-dd")">@entry.PublishedOnUtc.ToString("MMM dd")</time>
+                        <a class="archive-title" href="/blog/@entry.Slug">@entry.Title</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
 </section>

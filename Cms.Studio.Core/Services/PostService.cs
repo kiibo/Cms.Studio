@@ -129,6 +129,18 @@ public class PostService
             .OrderByDescending(m => m.Year).ThenByDescending(m => m.Month)
             .ToListAsync();
 
+    /// <summary>Full listing for the /archive index: every published post, newest first.</summary>
+    public Task<List<ArchiveEntry>> GetArchiveIndexAsync() =>
+        Published().AsNoTracking()
+            .OrderByDescending(p => p.PublishedOnUtc)
+            .Select(p => new ArchiveEntry
+            {
+                Title = p.Title,
+                Slug = p.Slug,
+                PublishedOnUtc = p.PublishedOnUtc!.Value
+            })
+            .ToListAsync();
+
     // ---------- view tracking & rankings ----------
 
     public async Task RegisterViewAsync(int postId)
@@ -452,4 +464,21 @@ public class ArchiveMonth
     public int Year { get; set; }
     public int Month { get; set; }
     public int Count { get; set; }
+}
+
+/// <summary>Lightweight row for the /archive index (title + slug + publish date).</summary>
+public class ArchiveEntry
+{
+    public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public DateTime PublishedOnUtc { get; set; }
+}
+
+/// <summary>One month block on the /archive index: the entries plus their grouping.</summary>
+public class ArchiveGroup
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public int Count => Entries.Count;
+    public List<ArchiveEntry> Entries { get; set; } = new();
 }

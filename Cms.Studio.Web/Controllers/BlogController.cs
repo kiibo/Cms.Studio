@@ -315,7 +315,17 @@ public class BlogController : Controller
     [HttpGet("/archive")]
     public async Task<IActionResult> ArchiveIndex()
     {
-        ViewBag.Months = await _posts.GetArchiveMonthsAsync();
+        // Group the full post listing by month so the archive page shows the articles
+        // themselves (not just month links).
+        ViewBag.Groups = (await _posts.GetArchiveIndexAsync())
+            .GroupBy(e => new { e.PublishedOnUtc.Year, e.PublishedOnUtc.Month })
+            .Select(g => new Cms.Studio.Core.Services.ArchiveGroup
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                Entries = g.ToList()
+            })
+            .ToList();
         var model = new ListViewModel { Title = "Archive", Description = "All posts by month.", CanonicalUrl = "/archive" };
         ViewData["Title"] = model.Title;
         ViewData["MetaDescription"] = model.Description;

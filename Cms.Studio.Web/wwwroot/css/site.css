@@ -829,6 +829,36 @@ code {
     justify-content: space-between;
 }
 
+/* archive index: month groups with the article list under each month */
+.archive-month { margin: 24px 0 4px; }
+.archive-month:first-of-type { margin-top: 6px; }
+.archive-month-heading {
+    font-size: 16.5px;
+    font-weight: 700;
+    margin: 0 0 2px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.archive-month-heading a { color: var(--accent-deep); }
+.archive-posts { list-style: none; padding: 0; margin: 0; }
+.archive-posts li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 15px;
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+}
+.archive-posts .archive-date {
+    color: var(--muted);
+    font-size: 13px;
+    min-width: 58px;
+    flex-shrink: 0;
+}
+.archive-posts .archive-title { flex: 1; min-width: 0; }
+.archive-posts li:hover .archive-title { color: var(--accent); }
+
 /* ---------- pager ---------- */
 .pager { display: flex; align-items: center; gap: 16px; margin: 20px 2px; font-size: 14px; }
 .pager-link {
