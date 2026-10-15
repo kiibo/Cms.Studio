@@ -53,6 +53,22 @@ send it as `Authorization: Bearer *** or `X-Api-Key: *** 60 req/min).
 | `GET /api/posts/{idOrSlug}` | one article incl. its Markdown body |
 | `POST /api/posts` | create (status defaults to **published**) |
 | `PUT /api/posts/{id}` | partial update (omitted fields keep their values) |
+| `POST /api/images` | upload an image (multipart, field `file`) → URL + Markdown snippet |
+| `POST /api/images/base64` | upload from base64 (`{"fileName":"a.png","dataBase64":"…"}`) |
+
+### Images in API-posted articles
+
+- **Self-hosted**: upload first with `POST /api/images` (or `/api/images/base64`), then write the
+  returned `markdown` straight into `contentMd` — e.g. `![cover](/uploads/2026/10/…jpg)`.
+  The response also carries `absoluteUrl` and an `html` snippet. The renderer lazy-loads all
+  body images automatically (`loading="lazy" decoding="async"`), and uploads get long-lived
+  cache headers (GUID names, `max-age=1y immutable`).
+- **External**: hot-linking someone else's image URL in Markdown works as-is
+  (`![alt](https://other-site/pic.jpg)`) — no upload needed, but that image's availability
+  and speed are up to the other site.
+- Upload validation mirrors the admin editor: jpg/jpeg/png/gif/webp/avif/bmp only, ≤ 10 MB,
+  magic-byte sniffed (a text file renamed to .png is rejected), random GUID file names, and
+  SVG/HTML can never be uploaded so images can't carry scripts.
 
 `POST /api/posts` body (JSON):
 

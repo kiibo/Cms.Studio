@@ -42,3 +42,13 @@ public class ApiPostInput
     /// <summary>ISO-8601 publish time — defaults to now when publishing.</summary>
     public DateTime? PublishedOnUtc { get; set; }
 }
+
+/// <summary>JSON body for <c>POST /api/images/base64</c>.</summary>
+public class ApiImageInput
+{
+    /// <summary>File name incl. extension — decides the stored type (jpg / png / gif / webp / …).</summary>
+    public string? FileName { get; set; }
+
+    /// <summary>The image bytes, base64-encoded.</summary>
+    public string? DataBase64 { get; set; }
+}

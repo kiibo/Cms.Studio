@@ -82,7 +82,8 @@
         Send the token as <code>Authorization: Bearer *** or <code>X-Api-Key</code>.
         Endpoints: <code>GET /api/catalog</code>, <code>GET /api/posts</code>,
         <code>GET /api/posts/{idOrSlug}</code>, <code>POST /api/posts</code>,
-        <code>PUT /api/posts/{id}</code>.</p>
+        <code>PUT /api/posts/{id}</code>, <code>POST /api/images</code> (multipart),
+        <code>POST /api/images/base64</code>.</p>
     @if (TempData["TokenSaved"] != null)
     {
         <p class="success">A new API token has been generated. Update your integrations — the old token no longer works.</p>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Cms.Studio.Web.Infrastructure;
 
 namespace Cms.Studio.Web.Controllers.Admin;
 
@@ -11,11 +12,6 @@ namespace Cms.Studio.Web.Controllers.Admin;
 [Route("admin/upload")]
 public class AdminUploadController : Controller
 {
-    internal static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".bmp"
-    };
-
     private const long MaxBytes = 10 * 1024 * 1024;
 
     private readonly IWebHostEnvironment _env;
@@ -30,71 +26,15 @@ public class AdminUploadController : Controller
     [RequestSizeLimit(MaxBytes)]
     public async Task<IActionResult> Image(IFormFile? file)
     {
-        if (file == null || file.Length == 0)
+        if (file == null)
             return BadRequest(new { error = "No file received." });
-        if (file.Length > MaxBytes)
-            return BadRequest(new { error = "Image is larger than 10 MB." });
 
-        if (string.IsNullOrWhiteSpace(file.FileName))
-            return BadRequest(new { error = "File name is empty." });
-
-        var ext = Path.GetExtension(file.FileName);
-        if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext))
-            return BadRequest(new { error = $"Unsupported image type '{ext}'." });
-
-        // Magic-byte sniff: never trust the extension alone.
-        var header = new byte[12];
-        await using (var s = file.OpenReadStream())
-        {
-            _ = await s.ReadAsync(header);
-        }
-        if (!HasValidImageHeader(header, ext))
-            return BadRequest(new { error = "File content does not look like a valid image." });
-
-        var relative = $"/uploads/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
-        var webRootPath = _env.WebRootPath;
-        if (string.IsNullOrEmpty(webRootPath))
-            return StatusCode(500, new { error = "WebRoot path is not configured." });
-
-        var absolute = Path.Combine(webRootPath,
-            relative.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-        var directoryPath = Path.GetDirectoryName(absolute);
-        if (string.IsNullOrEmpty(directoryPath))
-            return StatusCode(500, new { error = "Invalid directory path." });
-
-        Directory.CreateDirectory(directoryPath);
-
-        // Store the image as-is (masuit-style: the browser scales it via CSS + lazy loading).
-        await using (var target = System.IO.File.Create(absolute))
-        {
-            await file.CopyToAsync(target);
-        }
+        await using var stream = file.OpenReadStream();
+        var (ok, url, error) = await UploadedImageStore.SaveAsync(_env, file.FileName, stream, file.Length);
+        if (!ok)
+            return BadRequest(new { error });
 
         // { url } — mapped to Vditor's response shape by the editor's format() hook.
-        return Ok(new { url = relative });
-    }
-
-    internal static bool HasValidImageHeader(byte[] h, string ext)
-    {
-        // JPEG
-        if (ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-            return h[0] == 0xFF && h[1] == 0xD8 && h[2] == 0xFF;
-        // PNG
-        if (ext.Equals(".png", StringComparison.OrdinalIgnoreCase))
-            return h[0] == 0x89 && h[1] == 0x50 && h[2] == 0x4E && h[3] == 0x47;
-        // GIF
-        if (ext.Equals(".gif", StringComparison.OrdinalIgnoreCase))
-            return h[0] == 0x47 && h[1] == 0x49 && h[2] == 0x46;
-        // BMP
-        if (ext.Equals(".bmp", StringComparison.OrdinalIgnoreCase))
-            return h[0] == 0x42 && h[1] == 0x4D;
-        // WEBP: "RIFF"...."WEBP"
-        if (ext.Equals(".webp", StringComparison.OrdinalIgnoreCase))
-            return h[0] == 0x52 && h[1] == 0x49 && h[2] == 0x46 && h[3] == 0x46
-                   && h[8] == 0x57 && h[9] == 0x45 && h[10] == 0x42 && h[11] == 0x50;
-        // AVIF: "....ftypavif"
-        if (ext.Equals(".avif", StringComparison.OrdinalIgnoreCase))
-            return h[4] == 0x66 && h[5] == 0x74 && h[6] == 0x79 && h[7] == 0x70;
-        return false;
+        return Ok(new { url });
     }
 }

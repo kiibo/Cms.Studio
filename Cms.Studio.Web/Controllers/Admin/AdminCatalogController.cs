@@ -205,43 +205,16 @@ public class AdminSettingsController : Controller
         // Logo upload (same validation pipeline as post images)
         if (logo is { Length: > 0 })
         {
-            var ext = Path.GetExtension(logo.FileName);
-            if (string.IsNullOrEmpty(ext) || !AdminUploadController.AllowedExtensions.Contains(ext))
+            await using var read = logo.OpenReadStream();
+            var (ok, savedUrl, error) = await UploadedImageStore.SaveAsync(env, logo.FileName, read, logo.Length);
+            if (!ok)
             {
-                TempData["BrandError"] = $"Unsupported image type '{ext}'.";
+                TempData["BrandError"] = error;
                 return RedirectToAction("Index");
-            }
-
-            var header = new byte[12];
-            await using (var s = logo.OpenReadStream())
-            {
-                _ = await s.ReadAsync(header);
-            }
-            if (!AdminUploadController.HasValidImageHeader(header, ext))
-            {
-                TempData["BrandError"] = "The file does not look like a valid image.";
-                return RedirectToAction("Index");
-            }
-
-            var webRoot = env.WebRootPath;
-            if (string.IsNullOrEmpty(webRoot))
-            {
-                TempData["BrandError"] = "WebRoot path is not configured.";
-                return RedirectToAction("Index");
-            }
-
-            var relative = $"/uploads/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
-            var absolute = Path.Combine(webRoot, relative.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-            Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
-
-            await using (var read = logo.OpenReadStream())
-            await using (var target = System.IO.File.Create(absolute))
-            {
-                await read.CopyToAsync(target);
             }
 
             await DeleteLogoFileAsync(await _settings.GetSiteLogoAsync(), env);
-            await _settings.SetAsync(SettingService.SiteLogoKey, relative);
+            await _settings.SetAsync(SettingService.SiteLogoKey, savedUrl!);
         }
 
         TempData["BrandSaved"] = true;

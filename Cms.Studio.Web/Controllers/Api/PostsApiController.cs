@@ -24,9 +24,11 @@ public class PostsApiController : Controller
     private readonly SeriesService _series;
     private readonly SettingService _settings;
     private readonly ContentService _content;
+    private readonly IWebHostEnvironment _env;
 
     public PostsApiController(ApiTokenService tokens, PostService posts, CategoryService categories,
-        TagService tags, SeriesService series, SettingService settings, ContentService content)
+        TagService tags, SeriesService series, SettingService settings, ContentService content,
+        IWebHostEnvironment env)
     {
         _tokens = tokens;
         _posts = posts;
@@ -35,6 +37,7 @@ public class PostsApiController : Controller
         _series = series;
         _settings = settings;
         _content = content;
+        _env = env;
     }
 
     // ---------- auth ----------
@@ -252,6 +255,67 @@ public class PostsApiController : Controller
         await _posts.SaveAsync(post, tags, seriesIds);
         return Ok(await ShapeAsync(post, includeBody: false));
     }
+
+    // ---------- images ----------
+
+    /// <summary>
+    /// POST /api/images (multipart, field "file") — upload an image for article bodies.
+    /// Returns the public URL plus a ready-to-paste Markdown snippet:
+    /// <c>![alt](/uploads/2026/10/…jpg)</c>.
+    /// </summary>
+    [HttpPost("images")]
+    [RequestSizeLimit(12 * 1024 * 1024)]
+    public async Task<IActionResult> UploadImage(IFormFile? file)
+    {
+        if (await CheckAuthAsync() is { } denied) return denied;
+        if (file == null)
+            return BadRequest(new { error = "Send the image as multipart/form-data in the 'file' field." });
+
+        await using var stream = file.OpenReadStream();
+        var (ok, url, error) = await UploadedImageStore.SaveAsync(_env, file.FileName, stream, file.Length);
+        if (!ok)
+            return BadRequest(new { error });
+
+        return StatusCode(StatusCodes.Status201Created, await ShapeImageAsync(url!, file.FileName));
+    }
+
+    /// <summary>
+    /// POST /api/images/base64 (JSON: {"fileName":"cover.png","dataBase64":"…"}) — for agents
+    /// that hold image bytes (generated charts, screenshots) instead of a file.
+    /// </summary>
+    [HttpPost("images/base64")]
+    [RequestSizeLimit(16 * 1024 * 1024)]
+    public async Task<IActionResult> UploadImageBase64([FromBody] ApiImageInput? input)
+    {
+        if (await CheckAuthAsync() is { } denied) return denied;
+        if (!ModelState.IsValid || input == null || string.IsNullOrWhiteSpace(input.DataBase64))
+            return BadRequest(new { error = "JSON body with fileName and dataBase64 is required." });
+
+        byte[] bytes;
+        try
+        {
+            bytes = Convert.FromBase64String(input.DataBase64.Trim());
+        }
+        catch (FormatException)
+        {
+            return BadRequest(new { error = "dataBase64 is not valid base64." });
+        }
+
+        await using var stream = new MemoryStream(bytes);
+        var (ok, url, error) = await UploadedImageStore.SaveAsync(_env, input.FileName, stream, bytes.LongLength);
+        if (!ok)
+            return BadRequest(new { error });
+
+        return StatusCode(StatusCodes.Status201Created, await ShapeImageAsync(url!, input.FileName));
+    }
+
+    private async Task<object> ShapeImageAsync(string url, string? fileName) => new
+    {
+        Url = url,
+        AbsoluteUrl = Ui.Absolute(await _settings.GetBaseUrlAsync(), url),
+        Markdown = $"![{Path.GetFileNameWithoutExtension(fileName ?? "image")}]({url})",
+        Html = $"<img src=\"{url}\" alt=\"\" loading=\"lazy\" decoding=\"async\" />"
+    };
 
     // ---------- helpers ----------
 
