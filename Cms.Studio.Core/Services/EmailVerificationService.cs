@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Mail;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Hosting;
 
 namespace Cms.Studio.Core.Services;
@@ -59,11 +60,14 @@ public class EmailVerificationService
 {
     public const int CodeLifetimeHours = 24;
     public const int ResendCooldownSeconds = 120;
+    /// <summary>Wrong guesses allowed per code before it is invalidated (6-digit codes are brute-forceable otherwise).</summary>
+    public const int MaxAttemptsPerCode = 5;
 
     private readonly EmailSender _sender;
     private readonly IHostEnvironment _environment;
     private static readonly ConcurrentDictionary<string, (string Code, DateTime Expires)> Codes = new();
     private static readonly ConcurrentDictionary<string, DateTime> LastSent = new();
+    private static readonly ConcurrentDictionary<string, int> FailedAttempts = new();
 
     public EmailVerificationService(EmailSender sender, IHostEnvironment environment)
     {
@@ -84,9 +88,11 @@ public class EmailVerificationService
                 return new CodeIssueResult(false, $"Please wait {wait} seconds before requesting another code. Don't forget to check your spam folder.");
         }
 
-        var code = Random.Shared.Next(0, 1000000).ToString("D6");
+        // Cryptographically secure 6-digit code (Random.Shared is predictable enough to matter).
+        var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
         Codes[email] = (code, DateTime.UtcNow.AddHours(CodeLifetimeHours));
         LastSent[email] = DateTime.UtcNow;
+        FailedAttempts.TryRemove(email, out _);
 
         var subject = $"{siteName} — your comment verification code";
         var body = $"<p>Your verification code is: <strong style=\"color:#d33\">{code}</strong></p>" +
@@ -113,12 +119,22 @@ public class EmailVerificationService
         if (entry.Expires < DateTime.UtcNow)
         {
             Codes.TryRemove(email, out _);
+            FailedAttempts.TryRemove(email, out _);
             return false;
         }
         if (!string.Equals(entry.Code, code, StringComparison.Ordinal))
+        {
+            // Too many wrong guesses → burn the code so it cannot be brute-forced.
+            if (FailedAttempts.AddOrUpdate(email, 1, (_, v) => v + 1) >= MaxAttemptsPerCode)
+            {
+                Codes.TryRemove(email, out _);
+                FailedAttempts.TryRemove(email, out _);
+            }
             return false;
+        }
 
         Codes.TryRemove(email, out _);
+        FailedAttempts.TryRemove(email, out _);
         return true;
     }
 

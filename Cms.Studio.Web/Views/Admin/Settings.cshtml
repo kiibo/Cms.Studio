@@ -7,12 +7,20 @@
     <h1>Site settings</h1>
 </div>
 
+@if (ViewBag.UsingDefaultPassword == true)
+{
+    <div class="admin-card narrow" style="border-left: 4px solid #d33;">
+        <p class="error"><strong>Security warning:</strong> the admin account still uses the default password.
+            Change it below before someone else does.</p>
+    </div>
+}
+
 <div class="admin-card narrow">
     @if (TempData["Saved"] != null)
     {
         <p class="success">Settings saved.</p>
     }
-    <form method="post" action="/admin/settings">
+    <form method="post" action="@Ui.Admin("/settings")">
         @Html.AntiForgeryToken()
         <label>Site title
             <input type="text" name="siteTitle" value="@ViewBag.SiteTitle" />
@@ -30,5 +38,54 @@
             <input type="text" name="authorName" value="@ViewBag.AuthorName" />
         </label>
         <button type="submit" class="btn">Save</button>
+    </form>
+</div>
+
+<div class="admin-card narrow">
+    <h2>Security</h2>
+
+    @if (TempData["PathSaved"] != null)
+    {
+        <p class="success">Admin path updated. The console now lives at <strong>@TempData["PathSaved"]</strong> — update your bookmark.</p>
+    }
+    @if (TempData["PathError"] != null)
+    {
+        <p class="error">@TempData["PathError"]</p>
+    }
+
+    <form method="post" action="@Ui.Admin("/settings/security")">
+        @Html.AntiForgeryToken()
+        <label>Hidden admin path
+            <input type="text" name="adminPath" value="@ViewBag.AdminUrl" />
+        </label>
+        <p class="muted">The whole admin console only answers under this path. <code>/admin</code> returns 404,
+            and it is never linked from the public site. Change it if you ever leak it. The value is the path
+            itself, e.g. <code>/manage-1a2b3c4d</code> (3–64 chars: lowercase letters, digits, dashes).</p>
+        <button type="submit" class="btn secondary">Change admin path</button>
+    </form>
+
+    <hr />
+
+    @if (TempData["PasswordSaved"] != null)
+    {
+        <p class="success">Password changed.</p>
+    }
+    @if (TempData["PasswordError"] != null)
+    {
+        <p class="error">@TempData["PasswordError"]</p>
+    }
+
+    <form method="post" action="@Ui.Admin("/settings/security")">
+        @Html.AntiForgeryToken()
+        <label>Current password
+            <input type="password" name="currentPassword" autocomplete="current-password" required />
+        </label>
+        <label>New password (10+ characters)
+            <input type="password" name="newPassword" autocomplete="new-password" required />
+        </label>
+        <label>Repeat new password
+            <input type="password" name="confirmPassword" autocomplete="new-password" required />
+        </label>
+        <button type="submit" class="btn">Change password</button>
     </form>
 </div>

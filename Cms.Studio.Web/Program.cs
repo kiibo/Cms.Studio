@@ -1,7 +1,10 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Cms.Studio.Core.Data;
 using Cms.Studio.Core.Services;
+using Cms.Studio.Web.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownIPNetworks.Add(new System.Net.IPNetwork(System.Net.IPAddress.Parse("172.16.0.0"), 12));
     options.KnownIPNetworks.Add(new System.Net.IPNetwork(System.Net.IPAddress.Parse("192.168.0.0"), 16));
 });
+
+// ---------- request body ceiling (uploads are capped at 10 MB per action) ----------
+builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = 16 * 1024 * 1024);
 
 // ---------- multi-database (nopCommerce-style provider selection) ----------
 var dataProvider = builder.Configuration.GetSection("DataProvider").Get<DataProviderSettings>() ?? new DataProviderSettings();
@@ -43,10 +49,22 @@ builder.Services.AddScoped<SeriesService>();
 builder.Services.AddScoped<StatsService>();
 builder.Services.AddScoped<CommentService>();
 
+// ---------- security ----------
+builder.Services.AddSingleton<AdminPathProvider>();   // hidden admin console path
+builder.Services.AddScoped<AdminAccountService>();   // credential verification / password changes
+
 // ---------- web ----------
 builder.Services.AddControllersWithViews();
 // The editor uploads images via fetch/XHR, so accept the antiforgery token as a header too.
-builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-XSRF-TOKEN";
+    options.Cookie.Name = "cmsstudio.xsrf";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -55,12 +73,86 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/admin/login";
         options.Cookie.Name = "cmsstudio.admin";
         options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.SlidingExpiration = true;
+        // The real login URL lives under the hidden admin segment, so redirects are built at
+        // request time instead of from the (internal) LoginPath constant.
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = ctx =>
+            {
+                ctx.Response.Redirect(AdminPathProvider.Url("/login"));
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = ctx =>
+            {
+                ctx.Response.Redirect(AdminPathProvider.Url("/login"));
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
+
+// ---------- rate limiting (anti brute-force / anti flood) ----------
+static string ClientPartition(HttpContext ctx) =>
+    ctx.Connection.RemoteIpAddress?.ToString() ?? ctx.Connection.Id;
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (ctx, ct) =>
+    {
+        ctx.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        await ctx.HttpContext.Response.WriteAsync("Too many requests. Please slow down.", ct);
+    };
+
+    // Login attempts: 10/min per IP — credential brute-force becomes pointless
+    // (≈14k attempts/day/IP against a 10+ character password is noise).
+    options.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        "auth:" + ClientPartition(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // Comment submit / verification-code requests: 10 per 10 min per IP.
+    options.AddPolicy("comment", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        "comment:" + ClientPartition(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(10), QueueLimit = 0 }));
+
+    // Search: cheap per request but the query scans post bodies — keep it to 30/min per IP.
+    options.AddPolicy("search", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        "search:" + ClientPartition(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // Value feedback voting: 20/min per IP.
+    options.AddPolicy("vote", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        "vote:" + ClientPartition(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // Generous global ceiling per IP so no single client can saturate the app.
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ClientPartition(ctx),
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 300, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
+
+var forceHttps = builder.Configuration.GetValue<bool>("Security:ForceHttps");
 
 var app = builder.Build();
 
 DbInitializer.Initialize(app.Services);
+app.Services.GetRequiredService<AdminPathProvider>().Initialize();
+
+// ---------- startup security notice ----------
+{
+    var log = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Cms.Studio.Security");
+    log.LogWarning("Hidden admin console URL: {AdminUrl} — keep this path private", AdminPathProvider.Url("/login"));
+    using var scope = app.Services.CreateScope();
+    var accounts = scope.ServiceProvider.GetRequiredService<AdminAccountService>();
+    if (accounts.IsUsingDefaultPasswordAsync().GetAwaiter().GetResult())
+        log.LogWarning("The admin account still uses the default password. " +
+                       "Change it now on the settings page: {AdminUrl}", AdminPathProvider.Url("/settings"));
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -70,9 +162,18 @@ if (!app.Environment.IsDevelopment())
 // Must run first so everything downstream sees the real client IP and scheme.
 app.UseForwardedHeaders();
 
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<AdminPathMiddleware>();
+
+if (forceHttps)
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<Cms.Studio.Web.Infrastructure.VisitTrackingMiddleware>();

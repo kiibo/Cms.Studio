@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Cms.Studio.Core.Domain;
 using Cms.Studio.Core.Services;
 using Cms.Studio.Web.Helpers;
@@ -81,6 +82,7 @@ public class BlogController : Controller
     /// <summary>Article value feedback (ithome-style). No login; one vote per IP, last click wins.</summary>
     [HttpPost("/blog/{slug}/feedback")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("vote")]
     public async Task<IActionResult> Feedback(string slug, bool valuable)
     {
         var post = await _posts.GetBySlugAsync(slug);
@@ -107,8 +109,15 @@ public class BlogController : Controller
 
     [HttpPost("/blog/{slug}/comment")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("comment")]
     public async Task<IActionResult> SubmitComment(string slug, CommentFormModel form, string action)
     {
+        // Never trust form fields: treat missing values as empty and normalize once.
+        form.NickName = (form.NickName ?? string.Empty).Trim();
+        form.Email = (form.Email ?? string.Empty).Trim();
+        form.Content = (form.Content ?? string.Empty).Trim();
+        form.Code = (form.Code ?? string.Empty).Trim();
+
         var post = await _posts.GetBySlugAsync(slug);
         if (post == null)
             return NotFound();
@@ -125,7 +134,7 @@ public class BlogController : Controller
         }
 
         // ---- post comment: validate everything before consuming the code ----
-        if (form.NickName.Trim().Length is < 2 or > 50)
+        if (form.NickName.Length is < 2 or > 50)
             ModelState.AddModelError(nameof(form.NickName), "Nick name must be between 2 and 50 characters.");
         if (!EmailVerificationService.IsEmail(form.Email))
             ModelState.AddModelError(nameof(form.Email), "Please enter a valid email address.");
@@ -296,8 +305,14 @@ public class BlogController : Controller
     }
 
     [HttpGet("/search")]
+    [EnableRateLimiting("search")]
     public async Task<IActionResult> Search(string q, int page = 1)
     {
+        // Cap the query: it runs a LIKE over post bodies, so unbounded input is a DoS lever.
+        q = (q ?? string.Empty).Trim();
+        if (q.Length > 120)
+            q = q[..120];
+
         var pageSize = await _settings.GetPostsPerPageAsync();
         var model = new ListViewModel
         {

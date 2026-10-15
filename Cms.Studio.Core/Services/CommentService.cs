@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Cms.Studio.Core.Data;
 using Cms.Studio.Core.Domain;
@@ -26,9 +27,9 @@ public class CommentService
         {
             PostId = postId,
             ParentId = parentId,
-            NickName = nickName.Trim(),
-            Email = email.Trim().ToLowerInvariant(),
-            Content = content.Trim(),
+            NickName = Clean(nickName, 50),
+            Email = Clean(email, 100).ToLowerInvariant(),
+            Content = Clean(content, 2000),
             CreatedOnUtc = DateTime.UtcNow,
             IsApproved = false
         };
@@ -40,10 +41,25 @@ public class CommentService
     /// <summary>Duplicate guard (masuit-style): identical content from the same email within the window.</summary>
     public Task<bool> IsDuplicateAsync(int postId, string email, string content, TimeSpan window)
     {
-        email = email.Trim().ToLowerInvariant();
-        content = content.Trim();
+        email = (email ?? string.Empty).Trim().ToLowerInvariant();
+        content = (content ?? string.Empty).Trim();
         var since = DateTime.UtcNow - window;
         return _db.Comments.AnyAsync(c => c.PostId == postId && c.Email == email && c.Content == content && c.CreatedOnUtc >= since);
+    }
+
+    /// <summary>Trim + strip control characters (keeping newlines/tabs) and cap the length.</summary>
+    private static string Clean(string? value, int maxLength)
+    {
+        var sb = new StringBuilder((value ?? string.Empty).Length);
+        foreach (var ch in value ?? string.Empty)
+        {
+            if (char.IsControl(ch) && ch is not ('\r' or '\n' or '\t'))
+                continue;
+            sb.Append(ch);
+            if (sb.Length >= maxLength)
+                break;
+        }
+        return sb.ToString().Trim();
     }
 
     // ---------- admin ----------
@@ -64,10 +80,10 @@ public class CommentService
             query = query.Where(c => c.IsApproved == approved.Value);
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            var k = keyword.Trim();
-            query = query.Where(c => EF.Functions.Like(c.Content, $"%{k}%")
-                                 || EF.Functions.Like(c.NickName, $"%{k}%")
-                                 || EF.Functions.Like(c.Email, $"%{k}%"));
+            var k = LikePattern.Escape(keyword.Trim());
+            query = query.Where(c => EF.Functions.Like(c.Content, $"%{k}%", "\\")
+                                 || EF.Functions.Like(c.NickName, $"%{k}%", "\\")
+                                 || EF.Functions.Like(c.Email, $"%{k}%", "\\"));
         }
         return await query.OrderByDescending(c => c.CreatedOnUtc).Take(count).ToListAsync();
     }

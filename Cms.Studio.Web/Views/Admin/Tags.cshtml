@@ -22,7 +22,7 @@
                     <td><strong>@tag.Name</strong></td>
                     <td><span class="slug-chip">@tag.Slug</span></td>
                     <td class="actions">
-                        <form method="post" action="/admin/catalog/tags/delete/@tag.Id" class="inline"
+                        <form method="post" action="@Ui.Admin("/catalog/tags/delete/" + tag.Id)" class="inline"
                               onsubmit="return confirm('Delete this tag?');">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="icon-btn danger" title="Delete" aria-label="Delete @tag.Name">

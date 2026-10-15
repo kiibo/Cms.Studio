@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Cms.Studio.Core.Domain;
+using Cms.Studio.Web.Infrastructure;
 
 namespace Cms.Studio.Web.Helpers;
 
@@ -28,6 +29,12 @@ public static class Ui
     {
         return baseUrl.TrimEnd('/') + "/" + relativePath.TrimStart('/');
     }
+
+    /// <summary>
+    /// URL under the hidden admin console, e.g. <c>Ui.Admin("/posts")</c> → <c>/{hidden-segment}/posts</c>.
+    /// Never hardcode "/admin/…" in views — the public path answers 404 on purpose.
+    /// </summary>
+    public static string Admin(string path = "") => AdminPathProvider.Url(path);
 
     private static readonly Regex MdImage = new(@"!\[[^\]]*\]\((?<url>[^\s\)]+)", RegexOptions.Compiled);
     private static readonly Regex HtmlImage = new(@"<img[^>]+src=[""'](?<url>[^""']+)[""']", RegexOptions.Compiled | RegexOptions.IgnoreCase);

@@ -25,7 +25,7 @@ public class PostService
 
     public async Task<PagedResult<Post>> GetFeedAsync(int page, int pageSize)
     {
-        page = Math.Max(1, page);
+        page = Math.Clamp(page, 1, 10000);
         var query = FeedOrder(Published().AsNoTracking());
         var total = await query.CountAsync();
         var items = await query
@@ -66,7 +66,7 @@ public class PostService
 
     public async Task<PagedResult<Post>> GetBySeriesAsync(int seriesId, int page, int pageSize)
     {
-        page = Math.Max(1, page);
+        page = Math.Clamp(page, 1, 10000);
         var query = Published().Where(p => p.PostSeries.Any(ps => ps.SeriesId == seriesId));
         var total = await query.CountAsync();
         var items = await query
@@ -92,16 +92,17 @@ public class PostService
         if (string.IsNullOrWhiteSpace(query))
             return new PagedResult<Post>(new List<Post>(), page, pageSize, 0);
 
-        var q = query.Trim();
+        // Escape LIKE metacharacters so the search term is matched literally.
+        var q = LikePattern.Escape(query.Trim());
         return await PageAsync(Published().Where(p =>
-            EF.Functions.Like(p.Title, $"%{q}%") ||
-            EF.Functions.Like(p.Summary, $"%{q}%") ||
-            EF.Functions.Like(p.ContentMd, $"%{q}%")), page, pageSize);
+            EF.Functions.Like(p.Title, $"%{q}%", "\\") ||
+            EF.Functions.Like(p.Summary, $"%{q}%", "\\") ||
+            EF.Functions.Like(p.ContentMd, $"%{q}%", "\\")), page, pageSize);
     }
 
     private async Task<PagedResult<Post>> PageAsync(IQueryable<Post> query, int page, int pageSize)
     {
-        page = Math.Max(1, page);
+        page = Math.Clamp(page, 1, 10000);
         var total = await query.CountAsync();
         var items = await FeedOrder(query.AsNoTracking())
             .Include(p => p.Category)
@@ -224,8 +225,8 @@ public class PostService
         var query = _db.Posts.AsNoTracking().AsQueryable();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            var q = keyword.Trim();
-            query = query.Where(p => EF.Functions.Like(p.Title, $"%{q}%"));
+            var q = LikePattern.Escape(keyword.Trim());
+            query = query.Where(p => EF.Functions.Like(p.Title, $"%{q}%", "\\"));
         }
         if (status.HasValue)
             query = query.Where(p => p.Status == status.Value);

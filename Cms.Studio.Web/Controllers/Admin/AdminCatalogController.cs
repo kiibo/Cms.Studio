@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Cms.Studio.Core.Domain;
 using Cms.Studio.Core.Services;
+using Cms.Studio.Web.Infrastructure;
 
 namespace Cms.Studio.Web.Controllers.Admin;
 
@@ -99,10 +100,14 @@ public class AdminCatalogController : Controller
 public class AdminSettingsController : Controller
 {
     private readonly SettingService _settings;
+    private readonly AdminAccountService _accounts;
+    private readonly AdminPathProvider _adminPath;
 
-    public AdminSettingsController(SettingService settings)
+    public AdminSettingsController(SettingService settings, AdminAccountService accounts, AdminPathProvider adminPath)
     {
         _settings = settings;
+        _accounts = accounts;
+        _adminPath = adminPath;
     }
 
     [HttpGet("")]
@@ -113,6 +118,8 @@ public class AdminSettingsController : Controller
         ViewBag.SiteBaseUrl = await _settings.GetBaseUrlAsync();
         ViewBag.PostsPerPage = await _settings.GetAsync(SettingService.PostsPerPageKey, "10");
         ViewBag.AuthorName = await _settings.GetAuthorNameAsync();
+        ViewBag.AdminUrl = _adminPath.UrlFor("/login");
+        ViewBag.UsingDefaultPassword = await _accounts.IsUsingDefaultPasswordAsync();
         return View("~/Views/Admin/Settings.cshtml");
     }
 
@@ -127,6 +134,41 @@ public class AdminSettingsController : Controller
         await _settings.SetAsync(SettingService.PostsPerPageKey, postsPerPage ?? "10");
         await _settings.SetAsync(SettingService.AuthorNameKey, authorName ?? string.Empty);
         TempData["Saved"] = true;
+        return RedirectToAction("Index");
+    }
+
+    /// <summary>Security settings: hidden admin path + admin password change.</summary>
+    [HttpPost("security")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Security(string? adminPath, string? currentPassword,
+        string? newPassword, string? confirmPassword)
+    {
+        if (!string.IsNullOrWhiteSpace(adminPath))
+        {
+            if (_adminPath.TryChange(adminPath, out var error))
+            {
+                TempData["PathSaved"] = _adminPath.UrlFor("/login");
+                return RedirectToAction("Index");
+            }
+            TempData["PathError"] = error;
+            return RedirectToAction("Index");
+        }
+
+        if (!string.IsNullOrEmpty(newPassword) || !string.IsNullOrEmpty(confirmPassword))
+        {
+            if (!await _accounts.VerifyPasswordAsync(currentPassword ?? string.Empty))
+                TempData["PasswordError"] = "The current password is not correct.";
+            else if ((newPassword ?? string.Empty).Length < 10)
+                TempData["PasswordError"] = "The new password must be at least 10 characters.";
+            else if (newPassword != confirmPassword)
+                TempData["PasswordError"] = "The two new passwords do not match.";
+            else
+            {
+                await _accounts.ChangePasswordAsync(newPassword!);
+                TempData["PasswordSaved"] = true;
+            }
+        }
+
         return RedirectToAction("Index");
     }
 }

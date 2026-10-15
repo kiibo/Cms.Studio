@@ -30,7 +30,9 @@ dotnet run --project Cms.Studio.Web
 ```
 
 The database is created and seeded with sample data on first run.
-Admin area: `/admin/login` (default `admin` / `change-me` — change it in appsettings.json).
+Admin console: it lives under a **hidden path** (see [Security](#security-hardening)) — the startup log prints
+the URL (`Hidden admin console URL: /manage-…/login`). Default credentials `admin` / `change-me` —
+change the password on the settings page immediately.
 
 ## Comment verification e-mail
 
@@ -38,7 +40,37 @@ Admin area: `/admin/login` (default `admin` / `change-me` — change it in appse
 With `Host` left empty and the `Development` environment, the verification code is shown directly on the
 page instead of being e-mailed — handy for local testing. In production, configure SMTP so codes are delivered.
 
-Comment moderation: `/admin/comments` (Pending / All, Approve / Delete).
+Comment moderation: admin console → Comments (Pending / All, Approve / Delete).
+
+## Security hardening
+
+- **Hidden admin path** — the console only answers under `/{hidden-segment}/…`; `/admin` itself returns
+  a plain 404 so scanners learn nothing. The segment comes from `AdminAccount:AdminPath`
+  (appsettings.json / env var) or is generated randomly on first run and stored in the database
+  (printed in the startup log, changeable on the settings page). No public page ever links to it.
+- **Password** — change `change-me` on the settings page; it is stored as a PBKDF2-SHA256 hash
+  (`AdminPasswordHash` setting, or `AdminAccount:PasswordHash` in config). Login uses timing-safe
+  comparison and is rate-limited (10/min per IP) with generic error messages.
+- **Rate limiting** — login 10/min, comments + verification codes 10/10min, search 30/min,
+  feedback voting 20/min, global ceiling 300/min per IP (429 when exceeded).
+- **Search & comments** — search terms are capped at 120 chars and LIKE wildcards (`%`, `_`) are
+  escaped so the search box cannot trigger unbounded scans; comments are length-capped, control
+  characters are stripped and output is HTML-encoded (no script injection through either entry).
+  Verification codes are CSPRNG-generated, expire after 24h, are single-use and burn after 5 wrong guesses.
+- **HTTP hardening** — CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy` on every response; HSTS over HTTPS; optional `Security:ForceHttps` redirect;
+  16 MB request-body ceiling; cookies are HttpOnly (+ SameSite, Secure-by-scheme).
+- **Uploads** — admin-only, extension allow-list + magic-byte sniffing (no SVG/HTML uploads).
+
+Recommended for production:
+
+1. Set `AdminAccount:AdminPath` yourself and keep it private (or change it on the settings page if leaked).
+2. Change the default password immediately.
+3. Keep secrets out of `appsettings.json` — env vars (`DataProvider__ConnectionString`, `Smtp__Password`, …)
+   or user-secrets override any config value.
+4. Set `AllowedHosts` to your domain and enable `Security:ForceHttps` once TLS is set up.
+5. Self-host the Vditor editor assets (the admin editor currently loads from `cdn.jsdelivr.net`)
+   and drop the CDN origins from the CSP once vendored.
 
 ## Database configuration
 
