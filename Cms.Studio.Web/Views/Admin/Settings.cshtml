@@ -42,6 +42,37 @@
 </div>
 
 <div class="admin-card narrow">
+    <h2>Brand &amp; logo</h2>
+
+    @if (TempData["BrandSaved"] != null)
+    {
+        <p class="success">Brand settings saved.</p>
+    }
+    @if (TempData["BrandError"] != null)
+    {
+        <p class="error">@TempData["BrandError"]</p>
+    }
+
+    <form method="post" action="/admin/settings/brand" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <label>Brand text (shown in the header next to the logo)
+            <input type="text" name="brandText" value="@ViewBag.BrandText" maxlength="50" />
+        </label>
+        <label>Logo image (optional — jpg / png / webp / gif, shown instead of the default mark)
+            <input type="file" name="logo" accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.bmp" />
+        </label>
+        @if (!string.IsNullOrEmpty(ViewBag.SiteLogo))
+        {
+            <div class="logo-preview">
+                <img src="@ViewBag.SiteLogo" alt="current logo" />
+                <label class="inline"><input type="checkbox" name="removeLogo" value="true" /> Remove current logo</label>
+            </div>
+        }
+        <button type="submit" class="btn">Save brand</button>
+    </form>
+</div>
+
+<div class="admin-card narrow">
     <h2>Security</h2>
 
     @if (TempData["PasswordSaved"] != null)

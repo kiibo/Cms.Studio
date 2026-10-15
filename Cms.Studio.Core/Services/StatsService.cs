@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Cms.Studio.Core.Data;
 using Cms.Studio.Core.Domain;
 
@@ -7,14 +8,25 @@ namespace Cms.Studio.Core.Services;
 /// <summary>Small stats service for the admin dashboard counters.</summary>
 public class StatsService
 {
-    private readonly CmsDbContext _db;
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(60);
 
-    public StatsService(CmsDbContext db)
+    private readonly CmsDbContext _db;
+    private readonly IMemoryCache _cache;
+
+    public StatsService(CmsDbContext db, IMemoryCache cache)
     {
         _db = db;
+        _cache = cache;
     }
 
-    public async Task<DashboardStats> GetAsync()
+    public Task<DashboardStats> GetAsync() =>
+        _cache.GetOrCreateAsync("stats.dashboard", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheTtl;
+            return await LoadAsync();
+        });
+
+    private async Task<DashboardStats> LoadAsync()
     {
         var totalPosts = await _db.Posts.CountAsync();
         var published = await _db.Posts.CountAsync(p => p.Status == PostStatus.Published);
@@ -45,7 +57,14 @@ public class StatsService
     /// Per-day unique visitors for the dashboard curve.
     /// Rule: the same IP visiting several times on the same day counts once.
     /// </summary>
-    public async Task<List<DailyVisits>> GetDailyUniqueVisitorsAsync(int days)
+    public Task<List<DailyVisits>> GetDailyUniqueVisitorsAsync(int days) =>
+        _cache.GetOrCreateAsync($"stats.uv:{days}", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheTtl;
+            return await LoadDailyUniqueVisitorsAsync(days);
+        });
+
+    private async Task<List<DailyVisits>> LoadDailyUniqueVisitorsAsync(int days)
     {
         var today = DateTime.UtcNow.Date;
         var from = today.AddDays(-(days - 1));
@@ -64,7 +83,14 @@ public class StatsService
     }
 
     /// <summary>Aggregate visitor stats for a window: PV, UV, device/browser/platform split, top IPs.</summary>
-    public async Task<VisitorStats> GetVisitorStatsAsync(int days)
+    public Task<VisitorStats> GetVisitorStatsAsync(int days) =>
+        _cache.GetOrCreateAsync($"stats.visitors:{days}", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheTtl;
+            return await LoadVisitorStatsAsync(days);
+        });
+
+    private async Task<VisitorStats> LoadVisitorStatsAsync(int days)
     {
         var today = DateTime.UtcNow.Date;
         var from = today.AddDays(-(days - 1));

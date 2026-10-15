@@ -1,6 +1,8 @@
 @{
     var siteTitle = ViewData["Title"] as string ?? "Cms.Studio";
     var path = Context.Request.Path.Value ?? string.Empty;
+    var adminBrandText = await SiteSettings.GetSiteBrandTextAsync();
+    var adminSiteLogo = await SiteSettings.GetSiteLogoAsync();
     bool Active(string prefix) => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
@@ -14,7 +16,17 @@
 <body class="console-body">
     <div class="console-shell">
         <aside class="console-side">
-            <a class="console-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
+            <a class="console-brand" href="/">
+                @if (!string.IsNullOrEmpty(adminSiteLogo))
+                {
+                    <img class="brand-logo" src="@adminSiteLogo" alt="@adminBrandText" />
+                }
+                else
+                {
+                    <span class="brand-mark"></span>
+                }
+                @adminBrandText
+            </a>
             <button class="nav-toggle console-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="console-menu">
                 <span class="nav-toggle-bar"></span>
                 <span class="nav-toggle-bar"></span>

@@ -12,6 +12,8 @@ public class SettingService
     public const string SiteBaseUrlKey = "SiteBaseUrl";
     public const string PostsPerPageKey = "PostsPerPage";
     public const string AuthorNameKey = "AuthorName";
+    public const string SiteLogoKey = "SiteLogo";
+    public const string SiteBrandTextKey = "SiteBrandText";
 
     private readonly CmsDbContext _db;
     private static readonly Dictionary<string, string> Cache = new();
@@ -60,6 +62,12 @@ public class SettingService
     public Task<string> GetSiteDescriptionAsync() => GetAsync(SiteDescriptionKey, "");
     public Task<string> GetBaseUrlAsync() => GetAsync(SiteBaseUrlKey, "");
     public Task<string> GetAuthorNameAsync() => GetAsync(AuthorNameKey, "Admin");
+
+    /// <summary>Uploaded brand logo URL (empty → the default CSS mark is shown).</summary>
+    public Task<string> GetSiteLogoAsync() => GetAsync(SiteLogoKey, "");
+
+    /// <summary>Brand text in the header (defaults to "Cms.Studio").</summary>
+    public Task<string> GetSiteBrandTextAsync() => GetAsync(SiteBrandTextKey, "Cms.Studio");
 
     public async Task<int> GetPostsPerPageAsync()
     {

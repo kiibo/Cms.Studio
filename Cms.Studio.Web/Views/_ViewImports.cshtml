@@ -2,6 +2,9 @@
 @using Cms.Studio.Core.Services
 @using Cms.Studio.Web.Models
 @using Cms.Studio.Web.Helpers
+@using Microsoft.Extensions.Caching.Memory
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject CategoryService CategoryNavService
 @inject PostService LatestPostService
+@inject SettingService SiteSettings
+@inject IMemoryCache MemCache

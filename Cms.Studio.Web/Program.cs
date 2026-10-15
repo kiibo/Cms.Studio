@@ -1,7 +1,9 @@
+using System.IO.Compression;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Cms.Studio.Core.Data;
 using Cms.Studio.Core.Services;
 using Cms.Studio.Web.Infrastructure;
@@ -25,6 +27,30 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 // ---------- request body ceiling (uploads are capped at 10 MB per action) ----------
 builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = 16 * 1024 * 1024);
+
+// ---------- response compression (brotli + gzip for all text payloads) ----------
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = new[]
+    {
+        "text/html", "text/plain", "text/markdown", "text/css", "text/xml",
+        "text/javascript", "application/javascript", "application/json",
+        "application/xml", "application/rss+xml", "image/svg+xml"
+    };
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+
+// ---------- caching ----------
+builder.Services.AddMemoryCache();
+
+// ---------- visit analytics queue (page responses never wait on the log INSERT) ----------
+builder.Services.AddSingleton<VisitQueue>();
+builder.Services.AddHostedService<VisitWriterService>();
+builder.Services.AddHostedService<UploadThumbnailBackfillService>();
 
 // ---------- multi-database (nopCommerce-style provider selection) ----------
 var dataProvider = builder.Configuration.GetSection("DataProvider").Get<DataProviderSettings>() ?? new DataProviderSettings();
@@ -151,7 +177,19 @@ if (forceHttps)
     app.UseHttpsRedirection();
 }
 
-app.UseStaticFiles();
+app.UseResponseCompression();
+
+// Static assets: long-lived caching (upload filenames are GUIDs → safe to treat as immutable).
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        var isUpload = ctx.Context.Request.Path.StartsWithSegments("/uploads");
+        ctx.Context.Response.Headers.CacheControl = isUpload
+            ? "public, max-age=31536000, immutable"
+            : "public, max-age=604800";
+    }
+});
 
 app.UseRouting();
 app.UseRateLimiter();

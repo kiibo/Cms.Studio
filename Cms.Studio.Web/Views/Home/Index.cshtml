@@ -15,7 +15,7 @@
     var side = hero.Skip(1).ToList();
     <section class="hero @(hero.Count == 1 ? "hero-single" : "")">
         <a class="hero-card hero-main" href="/blog/@main.Slug">
-            <img src="@Ui.CoverUrl(main)" alt="" />
+            <img src="@Ui.CoverUrl(main)" alt="" fetchpriority="high" decoding="async" />
             <div class="hero-mask">
                 <span class="hero-tag">@main.Category.Name</span>
                 <h2>@main.Title</h2>
@@ -27,7 +27,7 @@
                 @foreach (var p in side)
                 {
                     <a class="hero-card" href="/blog/@p.Slug">
-                        <img src="@Ui.CoverUrl(p)" alt="" loading="lazy" />
+                        <img src="@Ui.ThumbUrl(Ui.CoverUrl(p))" alt="" loading="lazy" decoding="async" />
                         <div class="hero-mask">
                             <h3>@p.Title</h3>
                         </div>

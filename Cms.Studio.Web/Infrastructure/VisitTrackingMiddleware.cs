@@ -1,13 +1,15 @@
 using Cms.Studio.Core.Data;
 using Cms.Studio.Core.Domain;
 using Cms.Studio.Core.Services;
+using Cms.Studio.Web.Infrastructure;
 
 namespace Cms.Studio.Web.Infrastructure;
 
 /// <summary>
 /// Records every page request (IP, User-Agent, device/browser/platform, path, referer) into the
-/// VisitRecord table. Static assets, admin pages and failed requests are skipped; recording never
-/// breaks the response.
+/// VisitRecord table. Static assets, admin pages and failed requests are skipped. The row is
+/// handed to a bounded in-memory queue flushed by <see cref="VisitWriterService">, so rendering
+/// the page never waits on the analytics write.
 /// </summary>
 public class VisitTrackingMiddleware
 {
@@ -17,12 +19,12 @@ public class VisitTrackingMiddleware
     };
 
     private readonly RequestDelegate _next;
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly VisitQueue _queue;
 
-    public VisitTrackingMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
+    public VisitTrackingMiddleware(RequestDelegate next, VisitQueue queue)
     {
         _next = next;
-        _scopeFactory = scopeFactory;
+        _queue = queue;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -42,9 +44,7 @@ public class VisitTrackingMiddleware
             var ua = request.Headers.UserAgent.ToString();
             var client = UserAgentParser.Parse(ua);
 
-            using var scope = _scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
-            db.VisitRecords.Add(new VisitRecord
+            _queue.TryEnqueue(new VisitRecord
             {
                 Ip = ip,
                 UserAgent = ua.Length > 500 ? ua[..500] : ua,
@@ -55,12 +55,10 @@ public class VisitTrackingMiddleware
                 Referer = Truncate(request.Headers.Referer.ToString(), 300),
                 VisitedOnUtc = DateTime.UtcNow
             });
-            await db.SaveChangesAsync();
         }
         catch (Exception ex)
         {
             // Tracking must never break page rendering.
-            // Log the exception but don't rethrow to ensure the request completes normally.
             System.Diagnostics.Debug.WriteLine($"VisitTracking error: {ex.Message}");
         }
     }

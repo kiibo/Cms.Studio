@@ -16,6 +16,7 @@ public class ContentService
     private static readonly Regex Heading = new("<h(?<level>[23])[^>]*id=\"(?<id>[^\"]+)\"[^>]*>(?<text>.*?)</h[23]>", RegexOptions.Compiled | RegexOptions.Singleline);
     private static readonly Regex StandaloneImage = new(@"<p>(<img\b[^>]*/?>)</p>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex ImgAlt = new("alt=\"(?<alt>[^\"]*)\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex ImgTag = new("<img\\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public string ToHtml(string markdown)
     {
@@ -23,8 +24,13 @@ public class ContentService
             return string.Empty;
 
         var html = Markdown.ToHtml(markdown, Pipeline);
+        html = LazyLoadImages(html);
         return FigureImages(html);
     }
+
+    /// <summary>Adds lazy decoding to article images so long posts don't block first paint.</summary>
+    private static string LazyLoadImages(string html) =>
+        ImgTag.Replace(html, "<img loading=\"lazy\" decoding=\"async\" ");
 
     /// <summary>
     /// Wraps standalone images in &lt;figure&gt; with a caption from the alt text —

@@ -1,6 +1,7 @@
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Cms.Studio.Core.Domain;
 using Cms.Studio.Core.Services;
 using Cms.Studio.Web.Helpers;
@@ -10,15 +11,19 @@ namespace Cms.Studio.Web.Controllers;
 /// <summary>Machine-facing endpoints: RSS, sitemap.xml, robots.txt, llms.txt, llms-full.txt.</summary>
 public class FeedController : Controller
 {
+    /// <summary>Machine feeds are rebuilt at most this often (crawler-friendly, DB-friendly).</summary>
+    private static readonly TimeSpan FeedCacheTtl = TimeSpan.FromMinutes(10);
+
     private readonly PostService _posts;
     private readonly CategoryService _categories;
     private readonly TagService _tags;
     private readonly SeriesService _series;
     private readonly SettingService _settings;
     private readonly ContentService _content;
+    private readonly IMemoryCache _cache;
 
     public FeedController(PostService posts, CategoryService categories, TagService tags,
-        SeriesService series, SettingService settings, ContentService content)
+        SeriesService series, SettingService settings, ContentService content, IMemoryCache cache)
     {
         _posts = posts;
         _categories = categories;
@@ -26,11 +31,23 @@ public class FeedController : Controller
         _series = series;
         _settings = settings;
         _content = content;
+        _cache = cache;
+    }
+
+    /// <summary>Caches a rendered feed body for a short window (llms-full / sitemap / rss are expensive).</summary>
+    private async Task<IActionResult> CachedAsync(string key, Func<Task<(string Body, string ContentType)>> build)
+    {
+        var (body, contentType) = await _cache.GetOrCreateAsync(key, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FeedCacheTtl;
+            return await build();
+        });
+        return Content(body, contentType);
     }
 
     [HttpGet("/rss")]
     [HttpGet("/feed.xml")]
-    public async Task<IActionResult> Rss()
+    public Task<IActionResult> Rss() => CachedAsync("feed.rss", async () =>
     {
         var baseUrl = await _settings.GetBaseUrlAsync();
         var siteTitle = await _settings.GetSiteTitleAsync();
@@ -59,11 +76,11 @@ public class FeedController : Controller
         }
 
         var rss = new XDocument(new XElement("rss", new XAttribute("version", "2.0"), channel));
-        return Content(rss.ToString(), "application/rss+xml; charset=utf-8");
-    }
+        return (rss.ToString(), "application/rss+xml; charset=utf-8");
+    });
 
     [HttpGet("/sitemap.xml")]
-    public async Task<IActionResult> Sitemap()
+    public Task<IActionResult> Sitemap() => CachedAsync("feed.sitemap", async () =>
     {
         var baseUrl = await _settings.GetBaseUrlAsync();
         XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
@@ -92,8 +109,8 @@ public class FeedController : Controller
             Add($"/series/{series.Slug}", null, "0.5");
 
         var sitemap = new XDocument(new XElement(ns + "urlset", urlset.Elements()));
-        return Content(sitemap.ToString(), "application/xml; charset=utf-8");
-    }
+        return (sitemap.ToString(), "application/xml; charset=utf-8");
+    });
 
     [HttpGet("/robots.txt")]
     public async Task<IActionResult> Robots()
@@ -113,7 +130,7 @@ public class FeedController : Controller
 
     /// <summary>llms.txt — curated site index for LLM crawlers (llmstxt.org).</summary>
     [HttpGet("/llms.txt")]
-    public async Task<IActionResult> Llms()
+    public Task<IActionResult> Llms() => CachedAsync("feed.llms", async () =>
     {
         var baseUrl = await _settings.GetBaseUrlAsync();
         var siteTitle = await _settings.GetSiteTitleAsync();
@@ -139,12 +156,12 @@ public class FeedController : Controller
         foreach (var post in feed.Items)
             sb.AppendLine($"- [{post.Title}]({Ui.Absolute(baseUrl, $"/blog/{post.Slug}")}): {post.Summary}");
 
-        return Content(sb.ToString(), "text/markdown; charset=utf-8");
-    }
+        return (sb.ToString(), "text/markdown; charset=utf-8");
+    });
 
     /// <summary>llms-full.txt — complete article corpus in Markdown.</summary>
     [HttpGet("/llms-full.txt")]
-    public async Task<IActionResult> LlmsFull()
+    public Task<IActionResult> LlmsFull() => CachedAsync("feed.llms-full", async () =>
     {
         var baseUrl = await _settings.GetBaseUrlAsync();
         var siteTitle = await _settings.GetSiteTitleAsync();
@@ -166,6 +183,6 @@ public class FeedController : Controller
             sb.AppendLine();
         }
 
-        return Content(sb.ToString(), "text/markdown; charset=utf-8");
-    }
+        return (sb.ToString(), "text/markdown; charset=utf-8");
+    });
 }

@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Cms.Studio.Core.Data;
 using Cms.Studio.Core.Domain;
 
@@ -6,13 +8,40 @@ namespace Cms.Studio.Core.Services;
 
 public class PostService
 {
+    /// <summary>Public list queries are cached briefly (masuit-style .Cacheable() semantics) so
+    /// paging through the feed never repeats the same DB work; writes evict the cache.</summary>
+    private static readonly TimeSpan PublicCacheTtl = TimeSpan.FromSeconds(60);
+    private static readonly ConcurrentDictionary<string, byte> PublicCacheKeys = new();
+
     private readonly CmsDbContext _db;
     private readonly ContentService _content;
+    private readonly IMemoryCache _cache;
 
-    public PostService(CmsDbContext db, ContentService content)
+    public PostService(CmsDbContext db, ContentService content, IMemoryCache cache)
     {
         _db = db;
         _content = content;
+        _cache = cache;
+    }
+
+    /// <summary>Cached public read: every page of a listing is stored under its own key.</summary>
+    private async Task<PagedResult<Post>> CachedPageAsync(string cacheKey, Func<Task<PagedResult<Post>>> load)
+    {
+        if (_cache.TryGetValue(cacheKey, out PagedResult<Post>? cached) && cached != null)
+            return cached;
+
+        var result = await load();
+        _cache.Set(cacheKey, result, PublicCacheTtl);
+        PublicCacheKeys[cacheKey] = 0;
+        return result;
+    }
+
+    /// <summary>Drops every cached public listing (called after any content/feedback change).</summary>
+    private void EvictPublicCache()
+    {
+        foreach (var key in PublicCacheKeys.Keys)
+            _cache.Remove(key);
+        PublicCacheKeys.Clear();
     }
 
     private IQueryable<Post> Published() =>
@@ -23,17 +52,20 @@ public class PostService
 
     // ---------- public reads ----------
 
-    public async Task<PagedResult<Post>> GetFeedAsync(int page, int pageSize)
+    public Task<PagedResult<Post>> GetFeedAsync(int page, int pageSize)
     {
         page = Math.Clamp(page, 1, 10000);
-        var query = FeedOrder(Published().AsNoTracking());
-        var total = await query.CountAsync();
-        var items = await query
-            .Include(p => p.Category)
-            .Include(p => p.PostTags).ThenInclude(pt => pt.Tag)
-            .Skip((page - 1) * pageSize).Take(pageSize)
-            .ToListAsync();
-        return new PagedResult<Post>(items, page, pageSize, total);
+        return CachedPageAsync($"posts:feed:{page}:{pageSize}", async () =>
+        {
+            var query = FeedOrder(Published().AsNoTracking());
+            var total = await query.CountAsync();
+            var items = await query
+                .Include(p => p.Category)
+                .Include(p => p.PostTags).ThenInclude(pt => pt.Tag)
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .ToListAsync();
+            return new PagedResult<Post>(items, page, pageSize, total);
+        });
     }
 
     public Task<Post?> GetBySlugAsync(string slug) =>
@@ -58,46 +90,53 @@ public class PostService
         return post?.Slug;
     }
 
-    public async Task<PagedResult<Post>> GetByCategoryAsync(int categoryId, int page, int pageSize) =>
-        await PageAsync(Published().Where(p => p.CategoryId == categoryId), page, pageSize);
+    public Task<PagedResult<Post>> GetByCategoryAsync(int categoryId, int page, int pageSize) =>
+        CachedPageAsync($"posts:cat:{categoryId}:{page}:{pageSize}",
+            () => PageAsync(Published().Where(p => p.CategoryId == categoryId), page, pageSize));
 
-    public async Task<PagedResult<Post>> GetByTagAsync(int tagId, int page, int pageSize) =>
-        await PageAsync(Published().Where(p => p.PostTags.Any(pt => pt.TagId == tagId)), page, pageSize);
+    public Task<PagedResult<Post>> GetByTagAsync(int tagId, int page, int pageSize) =>
+        CachedPageAsync($"posts:tag:{tagId}:{page}:{pageSize}",
+            () => PageAsync(Published().Where(p => p.PostTags.Any(pt => pt.TagId == tagId)), page, pageSize));
 
-    public async Task<PagedResult<Post>> GetBySeriesAsync(int seriesId, int page, int pageSize)
+    public Task<PagedResult<Post>> GetBySeriesAsync(int seriesId, int page, int pageSize)
     {
         page = Math.Clamp(page, 1, 10000);
-        var query = Published().Where(p => p.PostSeries.Any(ps => ps.SeriesId == seriesId));
-        var total = await query.CountAsync();
-        var items = await query
-            .Include(p => p.Category)
-            .Include(p => p.PostTags).ThenInclude(pt => pt.Tag)
-            .Include(p => p.PostSeries).ThenInclude(ps => ps.Series)
-            .OrderBy(p => p.PostSeries.Where(ps => ps.SeriesId == seriesId).Select(ps => (int?)ps.DisplayOrder).Min())
-            .ThenByDescending(p => p.PublishedOnUtc)
-            .Skip((page - 1) * pageSize).Take(pageSize)
-            .ToListAsync();
-        return new PagedResult<Post>(items, page, pageSize, total);
+        return CachedPageAsync($"posts:series:{seriesId}:{page}:{pageSize}", async () =>
+        {
+            var query = Published().Where(p => p.PostSeries.Any(ps => ps.SeriesId == seriesId));
+            var total = await query.CountAsync();
+            var items = await query
+                .Include(p => p.Category)
+                .Include(p => p.PostTags).ThenInclude(pt => pt.Tag)
+                .Include(p => p.PostSeries).ThenInclude(ps => ps.Series)
+                .OrderBy(p => p.PostSeries.Where(ps => ps.SeriesId == seriesId).Select(ps => (int?)ps.DisplayOrder).Min())
+                .ThenByDescending(p => p.PublishedOnUtc)
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .ToListAsync();
+            return new PagedResult<Post>(items, page, pageSize, total);
+        });
     }
 
-    public async Task<PagedResult<Post>> GetByMonthAsync(int year, int month, int page, int pageSize)
+    public Task<PagedResult<Post>> GetByMonthAsync(int year, int month, int page, int pageSize)
     {
         var from = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
         var to = from.AddMonths(1);
-        return await PageAsync(Published().Where(p => p.PublishedOnUtc >= from && p.PublishedOnUtc < to), page, pageSize);
+        return CachedPageAsync($"posts:month:{year}:{month}:{page}:{pageSize}",
+            () => PageAsync(Published().Where(p => p.PublishedOnUtc >= from && p.PublishedOnUtc < to), page, pageSize));
     }
 
-    public async Task<PagedResult<Post>> SearchAsync(string query, int page, int pageSize)
+    public Task<PagedResult<Post>> SearchAsync(string query, int page, int pageSize)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return new PagedResult<Post>(new List<Post>(), page, pageSize, 0);
+            return Task.FromResult(new PagedResult<Post>(new List<Post>(), page, pageSize, 0));
 
         // Escape LIKE metacharacters so the search term is matched literally.
         var q = LikePattern.Escape(query.Trim());
-        return await PageAsync(Published().Where(p =>
-            EF.Functions.Like(p.Title, $"%{q}%", "\\") ||
-            EF.Functions.Like(p.Summary, $"%{q}%", "\\") ||
-            EF.Functions.Like(p.ContentMd, $"%{q}%", "\\")), page, pageSize);
+        return CachedPageAsync($"posts:search:{q}:{page}:{pageSize}",
+            () => PageAsync(Published().Where(p =>
+                EF.Functions.Like(p.Title, $"%{q}%", "\\") ||
+                EF.Functions.Like(p.Summary, $"%{q}%", "\\") ||
+                EF.Functions.Like(p.ContentMd, $"%{q}%", "\\")), page, pageSize));
     }
 
     private async Task<PagedResult<Post>> PageAsync(IQueryable<Post> query, int page, int pageSize)
@@ -343,6 +382,7 @@ public class PostService
         }
 
         await _db.SaveChangesAsync();
+        EvictPublicCache();
     }
 
     public async Task DeleteAsync(int id)
@@ -352,6 +392,7 @@ public class PostService
             return;
         _db.Posts.Remove(post);
         await _db.SaveChangesAsync();
+        EvictPublicCache();
     }
 
     private async Task<Tag> ResolveTagAsync(string name)
@@ -408,6 +449,7 @@ public class PostService
             row.UpdatedOnUtc = DateTime.UtcNow;
         }
         await _db.SaveChangesAsync();
+        EvictPublicCache();
     }
 
     /// <summary>Feedback counts for a post plus the current visitor's own vote (if any).</summary>

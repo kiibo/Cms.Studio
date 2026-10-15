@@ -116,6 +116,8 @@ public class AdminSettingsController : Controller
         ViewBag.SiteBaseUrl = await _settings.GetBaseUrlAsync();
         ViewBag.PostsPerPage = await _settings.GetAsync(SettingService.PostsPerPageKey, "10");
         ViewBag.AuthorName = await _settings.GetAuthorNameAsync();
+        ViewBag.BrandText = await _settings.GetSiteBrandTextAsync();
+        ViewBag.SiteLogo = await _settings.GetSiteLogoAsync();
         ViewBag.UsingDefaultPassword = await _accounts.IsUsingDefaultPasswordAsync();
         return View("~/Views/Admin/Settings.cshtml");
     }
@@ -155,5 +157,99 @@ public class AdminSettingsController : Controller
         }
 
         return RedirectToAction("Index");
+    }
+
+    /// <summary>Brand settings: header logo image + brand text.</summary>
+    [HttpPost("brand")]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(12 * 1024 * 1024)]
+    public async Task<IActionResult> Brand(string? brandText, IFormFile? logo, string? removeLogo,
+        [FromServices] IWebHostEnvironment env)
+    {
+        // Brand text
+        var text = (brandText ?? string.Empty).Trim();
+        if (text.Length > 0)
+        {
+            if (text.Length > 50)
+            {
+                TempData["BrandError"] = "The brand text must be 50 characters or fewer.";
+                return RedirectToAction("Index");
+            }
+            await _settings.SetAsync(SettingService.SiteBrandTextKey, text);
+        }
+
+        // Logo removal
+        if (string.Equals(removeLogo, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            await DeleteLogoFileAsync(await _settings.GetSiteLogoAsync(), env);
+            await _settings.SetAsync(SettingService.SiteLogoKey, string.Empty);
+            TempData["BrandSaved"] = true;
+            return RedirectToAction("Index");
+        }
+
+        // Logo upload (same validation pipeline as post images)
+        if (logo is { Length: > 0 })
+        {
+            var ext = Path.GetExtension(logo.FileName);
+            if (string.IsNullOrEmpty(ext) || !AdminUploadController.AllowedExtensions.Contains(ext))
+            {
+                TempData["BrandError"] = $"Unsupported image type '{ext}'.";
+                return RedirectToAction("Index");
+            }
+
+            var header = new byte[12];
+            await using (var s = logo.OpenReadStream())
+            {
+                _ = await s.ReadAsync(header);
+            }
+            if (!AdminUploadController.HasValidImageHeader(header, ext))
+            {
+                TempData["BrandError"] = "The file does not look like a valid image.";
+                return RedirectToAction("Index");
+            }
+
+            var webRoot = env.WebRootPath;
+            if (string.IsNullOrEmpty(webRoot))
+            {
+                TempData["BrandError"] = "WebRoot path is not configured.";
+                return RedirectToAction("Index");
+            }
+
+            var relative = $"/uploads/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
+            var absolute = Path.Combine(webRoot, relative.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
+
+            await using (var read = logo.OpenReadStream())
+            {
+                await ImagePipeline.SaveAsync(read, ext, absolute);
+            }
+
+            await DeleteLogoFileAsync(await _settings.GetSiteLogoAsync(), env);
+            await _settings.SetAsync(SettingService.SiteLogoKey, relative);
+        }
+
+        TempData["BrandSaved"] = true;
+        return RedirectToAction("Index");
+    }
+
+    /// <summary>Removes a replaced/removed logo file from wwwroot/uploads (never touches anything else).</summary>
+    private static Task DeleteLogoFileAsync(string? logoUrl, IWebHostEnvironment env)
+    {
+        if (!string.IsNullOrWhiteSpace(logoUrl) && logoUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var absolute = Path.Combine(env.WebRootPath ?? string.Empty,
+                    logoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                var root = Path.GetFullPath(Path.Combine(env.WebRootPath ?? string.Empty, "uploads"));
+                if (Path.GetFullPath(absolute).StartsWith(root, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(absolute))
+                    System.IO.File.Delete(absolute);
+            }
+            catch
+            {
+                // A leftover file is harmless; never fail the settings save over it.
+            }
+        }
+        return Task.CompletedTask;
     }
 }

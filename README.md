@@ -59,6 +59,24 @@ Comment moderation: admin console → Comments (Pending / All, Approve / Delete)
   16 MB request-body ceiling; cookies are HttpOnly (+ SameSite, Secure-by-scheme).
 - **Uploads** — admin-only, extension allow-list + magic-byte sniffing (no SVG/HTML uploads).
 
+## Performance
+
+- **Thumbnails** (masuit-style lazy list images): list cards / hero side cards load a generated
+  480 px `<name>.thumb.jpg` sidecar with `loading="lazy" decoding="async"`; post detail pages keep
+  the original image. Uploads are downscaled to ≤1920 px on save; missing sidecars for older
+  uploads are generated once at startup.
+- **Query caching** (masuit `.Cacheable()`-style): every public listing page (feed / category / tag /
+  series / archive / search) is cached per page for 60 s — clicking "next page" is instant — and
+  any post/feedback change evicts the cache immediately. Header nav + latest post are cached 2 min,
+  rss / sitemap / llms.txt / llms-full.txt 10 min, admin dashboard stats 60 s.
+- **Response compression**: brotli + gzip for all text payloads (HTML/CSS/JS/XML/JSON/Markdown).
+- **Static caching**: `/uploads/*` served `max-age=31536000, immutable` (GUID file names),
+  css/js/vendor `max-age=604800`.
+- **Visit analytics** writes are queued in memory and batch-inserted in the background — responses
+  never wait on the tracking INSERT.
+- **Brand & logo** (Settings → Brand & logo): upload a header logo image and edit the brand text
+  shown next to it (both the public header and the admin console).
+
 Recommended for production:
 
 1. Change the default password immediately.

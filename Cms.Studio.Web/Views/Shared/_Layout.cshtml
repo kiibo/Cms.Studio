@@ -7,9 +7,20 @@
     var currentPath = Context.Request.Path.Value ?? "/";
     var isHome = currentPath == "/";
     var q = Context.Request.Query["q"].ToString();
-    var navCategories = await CategoryNavService.GetAllAsync(showHidden: false);
-    var latestFeed = await LatestPostService.GetFeedAsync(1, 1);
-    var latestPost = latestFeed.Items.Count > 0 ? latestFeed.Items[0] : null;
+    // Navigation data changes rarely — cache it instead of querying on every page render.
+    var navCategories = await MemCache.GetOrCreateAsync("layout.nav-categories", async entry =>
+    {
+        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+        return await CategoryNavService.GetAllAsync(showHidden: false);
+    }) ?? new List<Category>();
+    var brandText = await SiteSettings.GetSiteBrandTextAsync();
+    var siteLogo = await SiteSettings.GetSiteLogoAsync();
+    var latestPost = await MemCache.GetOrCreateAsync("layout.latest-post", async entry =>
+    {
+        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+        var feed = await LatestPostService.GetFeedAsync(1, 1);
+        return feed.Items.Count > 0 ? feed.Items[0] : null;
+    });
     string NavOn(string prefix) => currentPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? "on" : "";
 }
 <!DOCTYPE html>
@@ -56,7 +67,17 @@
     }
     <header class="site-header">
         <div class="header-inner">
-            <a class="site-brand" href="/"><span class="brand-mark"></span>Cms.Studio</a>
+            <a class="site-brand" href="/">
+                @if (!string.IsNullOrEmpty(siteLogo))
+                {
+                    <img class="brand-logo" src="@siteLogo" alt="@brandText" />
+                }
+                else
+                {
+                    <span class="brand-mark"></span>
+                }
+                @brandText
+            </a>
             <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="header-menu">
                 <span class="nav-toggle-bar"></span>
                 <span class="nav-toggle-bar"></span>

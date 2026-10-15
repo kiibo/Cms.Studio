@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Cms.Studio.Web.Infrastructure;
 
 namespace Cms.Studio.Web.Controllers.Admin;
 
@@ -11,7 +12,7 @@ namespace Cms.Studio.Web.Controllers.Admin;
 [Route("admin/upload")]
 public class AdminUploadController : Controller
 {
-    private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    internal static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".bmp"
     };
@@ -48,7 +49,7 @@ public class AdminUploadController : Controller
         {
             _ = await s.ReadAsync(header);
         }
-        if (!IsImageHeader(header, ext))
+        if (!HasValidImageHeader(header, ext))
             return BadRequest(new { error = "File content does not look like a valid image." });
 
         var relative = $"/uploads/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
@@ -64,16 +65,17 @@ public class AdminUploadController : Controller
 
         Directory.CreateDirectory(directoryPath);
 
-        await using (var target = System.IO.File.Create(absolute))
+        // Downscale oversized photos and write the .thumb.jpg sidecar used by list pages.
+        await using (var read = file.OpenReadStream())
         {
-            await file.CopyToAsync(target);
+            await ImagePipeline.SaveAsync(read, ext, absolute);
         }
 
         // { url } — mapped to Vditor's response shape by the editor's format() hook.
         return Ok(new { url = relative });
     }
 
-    private static bool IsImageHeader(byte[] h, string ext)
+    internal static bool HasValidImageHeader(byte[] h, string ext)
     {
         // JPEG
         if (ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))

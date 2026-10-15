@@ -97,6 +97,32 @@ code {
 }
 .site-brand:hover { color: var(--ink); }
 
+/* Uploaded brand logo (Settings → Brand & logo); replaces the CSS mark when set. */
+.brand-logo {
+    height: 32px;
+    width: auto;
+    max-width: 180px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.logo-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0 12px;
+}
+.logo-preview img {
+    height: 44px;
+    width: auto;
+    max-width: 220px;
+    object-fit: contain;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4px;
+    background: #fff;
+}
+
 .brand-mark {
     width: 28px;
     height: 28px;
