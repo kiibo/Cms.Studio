@@ -1,0 +1,152 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "API";
+    var baseUrl = (string)ViewBag.BaseUrl;
+}
+
+<div class="admin-head">
+    <h1>Article API</h1>
+</div>
+
+<div class="admin-card">
+    <h2>Overview</h2>
+    <p class="muted">Machine API for AI agents / automations: publish, edit and look up articles —
+        and upload images for article bodies — without the admin UI. Articles go live immediately
+        unless <code>status: "draft"</code> is sent.</p>
+    <table class="admin-table">
+        <tr><th>Base URL</th><td><code>@baseUrl</code></td></tr>
+        <tr><th>Authentication</th><td><code>Authorization: Bearer *** (below)</code> or <code>X-Api-Key: *** requests/minute per IP</td></tr>
+        <tr><th>Content type</th><td><code>application/json</code> (image upload: <code>multipart/form-data</code>)</td></tr>
+        <tr><th>Errors</th><td>JSON <code>{"error": "…"}</code> — 400 validation, 401 bad/missing token, 404 not found</td></tr>
+    </table>
+
+    <h2>API token</h2>
+    <label>Token (send in every request; never publish it in code or prompts — use a secret store)
+        <input type="text" value="@ViewBag.ApiToken" readonly onclick="this.select();" />
+    </label>
+    <p class="muted">Rotate it on <a href="/admin/settings">Settings → API access</a> if it ever leaks
+        or an integration is retired.</p>
+</div>
+
+<div class="admin-card">
+    <h2>Endpoints (7)</h2>
+    <table class="admin-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><code>GET</code></td><td><code>/api/catalog</code></td><td>Categories / tags / series (id, name, slug)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/posts</code></td><td>List articles (<code>?keyword=&amp;status=draft|published&amp;page=&amp;pageSize=</code>)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/posts/{idOrSlug}</code></td><td>One article incl. its Markdown body</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/posts</code></td><td><strong>Create + publish</strong></td></tr>
+            <tr><td><code>PUT</code></td><td><code>/api/posts/{id}</code></td><td>Partial update (omitted fields keep their values)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/images</code></td><td>Upload image (multipart, field <code>file</code>)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/images/base64</code></td><td>Upload image from <code>{"fileName","dataBase64"}</code></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="admin-card">
+    <h2>POST /api/posts — request body</h2>
+    <table class="admin-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+            <tr><td><code>title</code></td><td>string</td><td><strong>Required</strong> on create, ≤ 200 chars</td></tr>
+            <tr><td><code>contentMd</code></td><td>string</td><td><strong>Required</strong> on create — Markdown body, ≤ 200,000 chars</td></tr>
+            <tr><td><code>slug</code></td><td>string</td><td>Optional — generated from the title; changes record a 301 redirect</td></tr>
+            <tr><td><code>summary</code></td><td>string</td><td>Optional — derived from the body when omitted</td></tr>
+            <tr><td><code>status</code></td><td>string</td><td><code>"published"</code> (default) or <code>"draft"</code></td></tr>
+            <tr><td><code>categoryId</code> / <code>categoryName</code></td><td>int / string</td><td>One required on create. Name auto-creates a category if new</td></tr>
+            <tr><td><code>tags</code></td><td>string[]</td><td>Auto-created when new. On update: omit to keep, <code>[]</code> to clear</td></tr>
+            <tr><td><code>seriesIds</code></td><td>int[]</td><td>Must exist (see /api/catalog). On update: omit to keep, <code>[]</code> to clear</td></tr>
+            <tr><td><code>coverImageUrl</code></td><td>string</td><td>Optional cover image URL</td></tr>
+            <tr><td><code>authorName</code></td><td>string</td><td>Defaults to the site's default author</td></tr>
+            <tr><td><code>metaTitle</code> / <code>metaDescription</code></td><td>string</td><td>Optional SEO overrides</td></tr>
+            <tr><td><code>isFixedTop</code></td><td>bool</td><td>Pin to top (default false)</td></tr>
+            <tr><td><code>publishedOnUtc</code></td><td>ISO-8601</td><td>Defaults to now when publishing</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Response — 201 created / 200 updated</h2>
+<pre><code>{
+  "id": 6,
+  "title": "RedMagic 12 Pro+ Is Here…",
+  "slug": "redmagic-12-pro-is-here",
+  "status": "published",
+  "url": "@baseUrl/blog/redmagic-12-pro-is-here",
+  "summary": "…",
+  "category": { "id": 1, "name": "Smartphones", "slug": "smartphones" },
+  "tags": ["redmagic", "gaming phones"],
+  "authorName": "TechBeggar",
+  "isFixedTop": false,
+  "publishedOnUtc": "2026-10-15T13:30:00Z",
+  "createdOnUtc": "2026-10-15T13:30:00Z",
+  "modifiedOnUtc": null
+}</code></pre>
+</div>
+
+<div class="admin-card">
+    <h2>POST /api/images — image upload</h2>
+    <p class="muted">jpg / jpeg / png / gif / webp / avif / bmp only, ≤ 10 MB, content must match the
+        file type (magic-byte checked); SVG/HTML are rejected. External image URLs can also be used
+        directly in Markdown without uploading.</p>
+    <h2>Response — 201</h2>
+<pre><code>{
+  "url": "/uploads/2026/10/0f3a…c2.jpg",
+  "absoluteUrl": "@baseUrl/uploads/2026/10/0f3a…c2.jpg",
+  "markdown": "![cover](/uploads/2026/10/0f3a…c2.jpg)",
+  "html": "&lt;img src=\"/uploads/2026/10/0f3a…c2.jpg\" alt=\"\" loading=\"lazy\" decoding=\"async\" /&gt;"
+}</code></pre>
+    <p class="muted">Paste the <code>markdown</code> field straight into <code>contentMd</code>.
+        Body images are lazy-loaded automatically. For base64 uploads send
+        <code>{"fileName": "chart.png", "dataBase64": "…"}</code> to <code>/api/images/base64</code>.</p>
+</div>
+
+<div class="admin-card">
+    <h2>Examples</h2>
+    <h3>Publish an article</h3>
+<pre><code>curl -X POST @baseUrl/api/posts \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{
+    "title": "My Article",
+    "contentMd": "# Hello\n\nMarkdown body…",
+    "categoryName": "Smartphones",
+    "tags": ["ai", "news"],
+    "status": "published"
+  }'</code></pre>
+
+    <h3>Edit / unpublish</h3>
+<pre><code>curl -X PUT @baseUrl/api/posts/6 \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{"status": "draft"}'</code></pre>
+
+    <h3>Upload an image, then use it</h3>
+<pre><code>curl -X POST @baseUrl/api/images \
+  -H "Authorization: Bearer ***" \
+  -F "file=@@cover.jpg"
+# → paste the returned "markdown" into contentMd</code></pre>
+
+    <h3>Discover categories / tags / series</h3>
+<pre><code>curl -H "Authorization: Bearer ***" @baseUrl/api/catalog</code></pre>
+</div>
+
+<div class="admin-card">
+    <h2>Give this to an AI platform</h2>
+    <p class="muted">Machine-readable spec: <code>docs/openapi.json</code> (OpenAPI 3.0 — import into
+        GPT Actions / Dify / Coze / n8n). Integration guide with a ready prompt block:
+        <code>docs/AGENT-GUIDE.md</code>. Or copy the block below into the platform's instructions and
+        provide the token through its secret store (e.g. as <code>TECHBEGGAR_API_TOKEN</code>):</p>
+<pre><code>You can publish articles to the TechBeggar blog via its HTTP API.
+
+- Base URL: @baseUrl
+- Authenticate every request with the header: Authorization: Bearer &lt;API_TOKEN&gt;
+  (the token is provided separately as a secret named TECHBEGGAR_API_TOKEN — never reveal it).
+- To publish: POST /api/posts with JSON {"title","contentMd","categoryName","tags","status":"published"}.
+  contentMd is Markdown. Title &lt;= 200 chars. categoryName auto-creates; tags auto-create.
+- To find valid categories/tags/series first: GET /api/catalog.
+- To host images: POST /api/images (multipart field "file") or POST /api/images/base64
+  {"fileName","dataBase64"}; paste the returned "markdown" into contentMd.
+  External image URLs may also be used directly in Markdown.
+- To edit: PUT /api/posts/{id} with only the fields to change.
+- Successful create returns 201 with the public "url" — always show it to the user.
+- Errors return {"error":"…"}; never retry more than 3 times; if 401, tell the user the
+  token needs to be updated on Settings → API access.</code></pre>
+</div>
