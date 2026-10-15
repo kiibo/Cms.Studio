@@ -101,11 +101,13 @@ public class AdminSettingsController : Controller
 {
     private readonly SettingService _settings;
     private readonly AdminAccountService _accounts;
+    private readonly ApiTokenService _apiTokens;
 
-    public AdminSettingsController(SettingService settings, AdminAccountService accounts)
+    public AdminSettingsController(SettingService settings, AdminAccountService accounts, ApiTokenService apiTokens)
     {
         _settings = settings;
         _accounts = accounts;
+        _apiTokens = apiTokens;
     }
 
     [HttpGet("")]
@@ -118,6 +120,7 @@ public class AdminSettingsController : Controller
         ViewBag.AuthorName = await _settings.GetAuthorNameAsync();
         ViewBag.BrandText = await _settings.GetSiteBrandTextAsync();
         ViewBag.SiteLogo = await _settings.GetSiteLogoAsync();
+        ViewBag.ApiToken = await _apiTokens.GetOrCreateAsync();
         ViewBag.UsingDefaultPassword = await _accounts.IsUsingDefaultPasswordAsync();
         return View("~/Views/Admin/Settings.cshtml");
     }
@@ -156,6 +159,19 @@ public class AdminSettingsController : Controller
             }
         }
 
+        return RedirectToAction("Index");
+    }
+
+    /// <summary>Machine API token: rotate it when leaked or when an integration is retired.</summary>
+    [HttpPost("api-token")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApiToken(string? regenerate)
+    {
+        if (string.Equals(regenerate, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            await _apiTokens.RegenerateAsync();
+            TempData["TokenSaved"] = true;
+        }
         return RedirectToAction("Index");
     }
 

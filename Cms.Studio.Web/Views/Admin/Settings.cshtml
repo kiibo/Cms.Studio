@@ -77,6 +77,27 @@
 </div>
 
 <div class="admin-card narrow">
+    <h2>API access</h2>
+    <p class="muted">For AI agents / automations that publish articles without the admin UI.
+        Send the token as <code>Authorization: Bearer *** or <code>X-Api-Key</code>.
+        Endpoints: <code>GET /api/catalog</code>, <code>GET /api/posts</code>,
+        <code>GET /api/posts/{idOrSlug}</code>, <code>POST /api/posts</code>,
+        <code>PUT /api/posts/{id}</code>.</p>
+    @if (TempData["TokenSaved"] != null)
+    {
+        <p class="success">A new API token has been generated. Update your integrations — the old token no longer works.</p>
+    }
+    <label>API token
+        <input type="text" value="@ViewBag.ApiToken" readonly onclick="this.select();" />
+    </label>
+    <form method="post" action="/admin/settings/api-token">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="regenerate" value="true" />
+        <button type="submit" class="btn secondary" onclick="return confirm('Regenerate the token? Existing integrations must use the new one.');">Regenerate token</button>
+    </form>
+</div>
+
+<div class="admin-card narrow">
     <h2>Security</h2>
 
     @if (TempData["PasswordSaved"] != null)

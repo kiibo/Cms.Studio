@@ -41,6 +41,52 @@ page instead of being e-mailed — handy for local testing. In production, confi
 
 Comment moderation: admin console → Comments (Pending / All, Approve / Delete).
 
+## Article API (for AI agents / automations)
+
+Publish articles without the admin UI. The token is on the admin settings page (Settings → API access);
+send it as `Authorization: Bearer *** or `X-Api-Key: *** 60 req/min).
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/catalog` | categories / tags / series (ids and names) |
+| `GET /api/posts?keyword=&status=draft\|published&page=&pageSize=` | list articles |
+| `GET /api/posts/{idOrSlug}` | one article incl. its Markdown body |
+| `POST /api/posts` | create (status defaults to **published**) |
+| `PUT /api/posts/{id}` | partial update (omitted fields keep their values) |
+
+`POST /api/posts` body (JSON):
+
+```jsonc
+{
+  "title": "My article",                    // required, <= 200 chars
+  "contentMd": "# Heading\n\nMarkdown…",     // required
+  "slug": "my-article",                     // optional, generated from the title
+  "summary": "Short summary",               // optional, derived from the body
+  "status": "published",                    // or "draft"
+  "categoryName": "AI Notes",               // or categoryId — new names are created
+  "tags": ["ai", "agents"],                 // created automatically when new
+  "seriesIds": [1],                         // optional, must exist
+  "coverImageUrl": "https://…/cover.jpg",
+  "authorName": "AI Writer",
+  "metaTitle": "…", "metaDescription": "…",
+  "isFixedTop": false,
+  "publishedOnUtc": "2026-10-15T10:00:00Z"   // defaults to now when publishing
+}
+```
+
+Example:
+
+```bash
+curl -X POST https://your-site/api/posts \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"title":"Hello","contentMd":"# Hello","categoryName":"News"}'
+# -> 201 {"id":6,"slug":"hello","url":"https://your-site/blog/hello", …}
+```
+
+Errors return JSON `{"error": "…"}` with 400 / 401 / 404; the response of a successful
+create/update includes the final slug and public URL. Rotating the token on the settings page
+invalidates the old one immediately.
+
 ## Security hardening
 
 - **Admin path stays out of sight** — `/admin` is the console entrance, but no public page links to it,

@@ -76,6 +76,7 @@ builder.Services.AddScoped<CommentService>();
 
 // ---------- security ----------
 builder.Services.AddScoped<AdminAccountService>();   // credential verification / password changes
+builder.Services.AddScoped<ApiTokenService>();       // machine API token (AI agents posting articles)
 
 // ---------- web ----------
 builder.Services.AddControllersWithViews();
@@ -137,6 +138,11 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("vote", ctx => RateLimitPartition.GetFixedWindowLimiter(
         "vote:" + ClientPartition(ctx),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // Machine API (AI agents posting articles): 60/min per IP.
+    options.AddPolicy("api", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        "api:" + ClientPartition(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 
     // Generous global ceiling per IP so no single client can saturate the app.
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
