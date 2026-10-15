@@ -1,6 +1,7 @@
 bin/
 obj/
-wwwroot/uploads/
+**/wwwroot/uploads/
+Cms.Studio.Web/wwwroot/uploads/
 *.db-shm
 *.db-wal
 *.user
