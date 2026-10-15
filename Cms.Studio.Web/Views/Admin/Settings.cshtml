@@ -20,7 +20,7 @@
     {
         <p class="success">Settings saved.</p>
     }
-    <form method="post" action="@Ui.Admin("/settings")">
+    <form method="post" action="/admin/settings">
         @Html.AntiForgeryToken()
         <label>Site title
             <input type="text" name="siteTitle" value="@ViewBag.SiteTitle" />
@@ -44,28 +44,6 @@
 <div class="admin-card narrow">
     <h2>Security</h2>
 
-    @if (TempData["PathSaved"] != null)
-    {
-        <p class="success">Admin path updated. The console now lives at <strong>@TempData["PathSaved"]</strong> — update your bookmark.</p>
-    }
-    @if (TempData["PathError"] != null)
-    {
-        <p class="error">@TempData["PathError"]</p>
-    }
-
-    <form method="post" action="@Ui.Admin("/settings/security")">
-        @Html.AntiForgeryToken()
-        <label>Hidden admin path
-            <input type="text" name="adminPath" value="@ViewBag.AdminUrl" />
-        </label>
-        <p class="muted">The whole admin console only answers under this path. <code>/admin</code> returns 404,
-            and it is never linked from the public site. Change it if you ever leak it. The value is the path
-            itself, e.g. <code>/manage-1a2b3c4d</code> (3–64 chars: lowercase letters, digits, dashes).</p>
-        <button type="submit" class="btn secondary">Change admin path</button>
-    </form>
-
-    <hr />
-
     @if (TempData["PasswordSaved"] != null)
     {
         <p class="success">Password changed.</p>
@@ -75,7 +53,7 @@
         <p class="error">@TempData["PasswordError"]</p>
     }
 
-    <form method="post" action="@Ui.Admin("/settings/security")">
+    <form method="post" action="/admin/settings/security">
         @Html.AntiForgeryToken()
         <label>Current password
             <input type="password" name="currentPassword" autocomplete="current-password" required />

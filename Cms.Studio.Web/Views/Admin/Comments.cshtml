@@ -10,7 +10,7 @@
 
 <div class="admin-head">
     <h1>Blog comments <span class="muted">(@ViewBag.PendingCount pending)</span></h1>
-    <form class="filter-form" method="get" action="@Ui.Admin("/comments")">
+    <form class="filter-form" method="get" action="/admin/comments">
         <select name="status">
             <option value="all" selected="@(status == "all" ? "selected" : null)">All</option>
             <option value="pending" selected="@(status == "pending" ? "selected" : null)">Not approved</option>
@@ -22,7 +22,7 @@
 </div>
 
 <div class="admin-card">
-    <form method="post" action="@Ui.Admin("/comments/action")" id="comments-form">
+    <form method="post" action="/admin/comments/action" id="comments-form">
         @Html.AntiForgeryToken()
         <input type="hidden" name="status" value="@status" />
         <input type="hidden" name="keyword" value="@keyword" />
@@ -64,7 +64,7 @@
                         <tr>
                             <td><input type="checkbox" name="ids" value="@comment.Id" class="row-check" /></td>
                             <td>
-                                <a href="@Ui.Admin("/posts/edit/" + comment.PostId)" title="Edit post">@postTitles[comment.PostId]</a>
+                                <a href="/admin/posts/edit/@comment.PostId" title="Edit post">@postTitles[comment.PostId]</a>
                             </td>
                             <td class="comment-customer">
                                 <strong>@comment.NickName</strong>

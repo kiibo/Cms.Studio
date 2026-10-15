@@ -10,7 +10,7 @@
     {
         <p class="error">@Model.Error</p>
     }
-    <form method="post" action="@Ui.Admin("/login")">
+    <form method="post" action="/admin/login">
         @Html.AntiForgeryToken()
         <label>Username
             <input type="text" name="Username" value="@Model.Username" autofocus />

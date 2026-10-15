@@ -16,11 +16,11 @@
             <a class="btn secondary" href="/blog/@(Model.Post.Slug).md" target="_blank">View Markdown</a>
         }
         <button type="submit" form="post-form" class="btn">Save</button>
-        <a class="btn secondary" href="@Ui.Admin("/posts")">Back to list</a>
+        <a class="btn secondary" href="/admin/posts">Back to list</a>
     </div>
 </div>
 
-<form method="post" action="@Ui.Admin("/posts/edit/" + (isNew ? "" : Model.Post.Id.ToString()))" class="post-edit-form" id="post-form">
+<form method="post" action="/admin/posts/edit/@(isNew ? "" : Model.Post.Id.ToString())" class="post-edit-form" id="post-form">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="All"></div>
 
@@ -164,7 +164,7 @@
                     hljs: { enable: true, style: 'github' }
                 },
                 upload: {
-                    url: '@Ui.Admin("/upload/image")',
+                    url: '/admin/upload/image',
                     fieldName: 'file',
                     accept: 'image/*',
                     max: 10 * 1024 * 1024,
@@ -212,7 +212,7 @@
             body.append('file', file);
 
             try {
-                const resp = await fetch('@Ui.Admin("/upload/image")', {
+                const resp = await fetch('/admin/upload/image', {
                     method: 'POST',
                     body: body,
                     headers: { 'X-XSRF-TOKEN': csrfToken }

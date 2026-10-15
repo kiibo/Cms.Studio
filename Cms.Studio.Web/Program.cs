@@ -50,7 +50,6 @@ builder.Services.AddScoped<StatsService>();
 builder.Services.AddScoped<CommentService>();
 
 // ---------- security ----------
-builder.Services.AddSingleton<AdminPathProvider>();   // hidden admin console path
 builder.Services.AddScoped<AdminAccountService>();   // credential verification / password changes
 
 // ---------- web ----------
@@ -77,21 +76,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.ExpireTimeSpan = TimeSpan.FromHours(12);
         options.SlidingExpiration = true;
-        // The real login URL lives under the hidden admin segment, so redirects are built at
-        // request time instead of from the (internal) LoginPath constant.
-        options.Events = new CookieAuthenticationEvents
-        {
-            OnRedirectToLogin = ctx =>
-            {
-                ctx.Response.Redirect(AdminPathProvider.Url("/login"));
-                return Task.CompletedTask;
-            },
-            OnRedirectToAccessDenied = ctx =>
-            {
-                ctx.Response.Redirect(AdminPathProvider.Url("/login"));
-                return Task.CompletedTask;
-            }
-        };
     });
 builder.Services.AddAuthorization();
 
@@ -141,17 +125,15 @@ var forceHttps = builder.Configuration.GetValue<bool>("Security:ForceHttps");
 var app = builder.Build();
 
 DbInitializer.Initialize(app.Services);
-app.Services.GetRequiredService<AdminPathProvider>().Initialize();
 
 // ---------- startup security notice ----------
 {
     var log = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Cms.Studio.Security");
-    log.LogWarning("Hidden admin console URL: {AdminUrl} — keep this path private", AdminPathProvider.Url("/login"));
     using var scope = app.Services.CreateScope();
     var accounts = scope.ServiceProvider.GetRequiredService<AdminAccountService>();
     if (accounts.IsUsingDefaultPasswordAsync().GetAwaiter().GetResult())
         log.LogWarning("The admin account still uses the default password. " +
-                       "Change it now on the settings page: {AdminUrl}", AdminPathProvider.Url("/settings"));
+                       "Change it now on the settings page: /admin/settings");
 }
 
 if (!app.Environment.IsDevelopment())
@@ -163,7 +145,6 @@ if (!app.Environment.IsDevelopment())
 app.UseForwardedHeaders();
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
-app.UseMiddleware<AdminPathMiddleware>();
 
 if (forceHttps)
 {

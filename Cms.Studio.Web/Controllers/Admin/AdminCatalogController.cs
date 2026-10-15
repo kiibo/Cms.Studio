@@ -101,13 +101,11 @@ public class AdminSettingsController : Controller
 {
     private readonly SettingService _settings;
     private readonly AdminAccountService _accounts;
-    private readonly AdminPathProvider _adminPath;
 
-    public AdminSettingsController(SettingService settings, AdminAccountService accounts, AdminPathProvider adminPath)
+    public AdminSettingsController(SettingService settings, AdminAccountService accounts)
     {
         _settings = settings;
         _accounts = accounts;
-        _adminPath = adminPath;
     }
 
     [HttpGet("")]
@@ -118,7 +116,6 @@ public class AdminSettingsController : Controller
         ViewBag.SiteBaseUrl = await _settings.GetBaseUrlAsync();
         ViewBag.PostsPerPage = await _settings.GetAsync(SettingService.PostsPerPageKey, "10");
         ViewBag.AuthorName = await _settings.GetAuthorNameAsync();
-        ViewBag.AdminUrl = _adminPath.UrlFor("/login");
         ViewBag.UsingDefaultPassword = await _accounts.IsUsingDefaultPasswordAsync();
         return View("~/Views/Admin/Settings.cshtml");
     }
@@ -137,23 +134,11 @@ public class AdminSettingsController : Controller
         return RedirectToAction("Index");
     }
 
-    /// <summary>Security settings: hidden admin path + admin password change.</summary>
+    /// <summary>Security settings: admin password change.</summary>
     [HttpPost("security")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Security(string? adminPath, string? currentPassword,
-        string? newPassword, string? confirmPassword)
+    public async Task<IActionResult> Security(string? currentPassword, string? newPassword, string? confirmPassword)
     {
-        if (!string.IsNullOrWhiteSpace(adminPath))
-        {
-            if (_adminPath.TryChange(adminPath, out var error))
-            {
-                TempData["PathSaved"] = _adminPath.UrlFor("/login");
-                return RedirectToAction("Index");
-            }
-            TempData["PathError"] = error;
-            return RedirectToAction("Index");
-        }
-
         if (!string.IsNullOrEmpty(newPassword) || !string.IsNullOrEmpty(confirmPassword))
         {
             if (!await _accounts.VerifyPasswordAsync(currentPassword ?? string.Empty))

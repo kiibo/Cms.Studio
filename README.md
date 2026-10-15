@@ -30,9 +30,8 @@ dotnet run --project Cms.Studio.Web
 ```
 
 The database is created and seeded with sample data on first run.
-Admin console: it lives under a **hidden path** (see [Security](#security-hardening)) — the startup log prints
-the URL (`Hidden admin console URL: /manage-…/login`). Default credentials `admin` / `change-me` —
-change the password on the settings page immediately.
+Admin area: `/admin/login` (default `admin` / `change-me` — change the password on the settings page
+immediately). The admin path is never linked from public pages and is kept out of sitemap.xml / search indexes.
 
 ## Comment verification e-mail
 
@@ -44,10 +43,8 @@ Comment moderation: admin console → Comments (Pending / All, Approve / Delete)
 
 ## Security hardening
 
-- **Hidden admin path** — the console only answers under `/{hidden-segment}/…`; `/admin` itself returns
-  a plain 404 so scanners learn nothing. The segment comes from `AdminAccount:AdminPath`
-  (appsettings.json / env var) or is generated randomly on first run and stored in the database
-  (printed in the startup log, changeable on the settings page). No public page ever links to it.
+- **Admin path stays out of sight** — `/admin` is the console entrance, but no public page links to it,
+  sitemap.xml never lists it and `robots.txt` disallows it so search engines keep it out of the index.
 - **Password** — change `change-me` on the settings page; it is stored as a PBKDF2-SHA256 hash
   (`AdminPasswordHash` setting, or `AdminAccount:PasswordHash` in config). Login uses timing-safe
   comparison and is rate-limited (10/min per IP) with generic error messages.
@@ -64,12 +61,11 @@ Comment moderation: admin console → Comments (Pending / All, Approve / Delete)
 
 Recommended for production:
 
-1. Set `AdminAccount:AdminPath` yourself and keep it private (or change it on the settings page if leaked).
-2. Change the default password immediately.
-3. Keep secrets out of `appsettings.json` — env vars (`DataProvider__ConnectionString`, `Smtp__Password`, …)
+1. Change the default password immediately.
+2. Keep secrets out of `appsettings.json` — env vars (`DataProvider__ConnectionString`, `Smtp__Password`, …)
    or user-secrets override any config value.
-4. Set `AllowedHosts` to your domain and enable `Security:ForceHttps` once TLS is set up.
-5. Self-host the Vditor editor assets (the admin editor currently loads from `cdn.jsdelivr.net`)
+3. Set `AllowedHosts` to your domain and enable `Security:ForceHttps` once TLS is set up.
+4. Self-host the Vditor editor assets (the admin editor currently loads from `cdn.jsdelivr.net`)
    and drop the CDN origins from the CSP once vendored.
 
 ## Database configuration
