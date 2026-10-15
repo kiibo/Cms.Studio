@@ -58,9 +58,13 @@
         <label>Brand text (shown in the header next to the logo)
             <input type="text" name="brandText" value="@ViewBag.BrandText" maxlength="50" />
         </label>
-        <label>Logo image (optional — jpg / png / webp / gif, shown instead of the default mark)
+        <label>Logo image (optional)
             <input type="file" name="logo" accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.bmp" />
         </label>
+        <p class="muted">No image needed: when no logo is uploaded (or the current one is removed), the header
+            keeps using the classic <strong>CMS.STUDIO</strong> text logo with the default mark. You can update the
+            brand text alone — uploading a picture is never required. Leave the text blank to restore the default
+            "Cms.Studio".</p>
         @if (!string.IsNullOrEmpty(ViewBag.SiteLogo))
         {
             <div class="logo-preview">

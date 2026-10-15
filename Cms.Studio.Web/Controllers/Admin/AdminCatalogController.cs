@@ -166,17 +166,16 @@ public class AdminSettingsController : Controller
     public async Task<IActionResult> Brand(string? brandText, IFormFile? logo, string? removeLogo,
         [FromServices] IWebHostEnvironment env)
     {
-        // Brand text
+        // Brand text — blank means "back to the classic CMS.STUDIO logo text".
         var text = (brandText ?? string.Empty).Trim();
-        if (text.Length > 0)
+        if (text.Length == 0)
+            text = "Cms.Studio";
+        if (text.Length > 50)
         {
-            if (text.Length > 50)
-            {
-                TempData["BrandError"] = "The brand text must be 50 characters or fewer.";
-                return RedirectToAction("Index");
-            }
-            await _settings.SetAsync(SettingService.SiteBrandTextKey, text);
+            TempData["BrandError"] = "The brand text must be 50 characters or fewer.";
+            return RedirectToAction("Index");
         }
+        await _settings.SetAsync(SettingService.SiteBrandTextKey, text);
 
         // Logo removal
         if (string.Equals(removeLogo, "true", StringComparison.OrdinalIgnoreCase))

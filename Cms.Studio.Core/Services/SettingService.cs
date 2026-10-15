@@ -66,8 +66,12 @@ public class SettingService
     /// <summary>Uploaded brand logo URL (empty → the default CSS mark is shown).</summary>
     public Task<string> GetSiteLogoAsync() => GetAsync(SiteLogoKey, "");
 
-    /// <summary>Brand text in the header (defaults to "Cms.Studio").</summary>
-    public Task<string> GetSiteBrandTextAsync() => GetAsync(SiteBrandTextKey, "Cms.Studio");
+    /// <summary>Brand text in the header. Falls back to the classic "Cms.Studio" logo text when unset/blank.</summary>
+    public async Task<string> GetSiteBrandTextAsync()
+    {
+        var value = await GetAsync(SiteBrandTextKey, "Cms.Studio");
+        return string.IsNullOrWhiteSpace(value) ? "Cms.Studio" : value.Trim();
+    }
 
     public async Task<int> GetPostsPerPageAsync()
     {
