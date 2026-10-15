@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Cms.Studio.Web.Infrastructure;
 
 namespace Cms.Studio.Web.Controllers.Admin;
 
@@ -65,10 +64,10 @@ public class AdminUploadController : Controller
 
         Directory.CreateDirectory(directoryPath);
 
-        // Downscale oversized photos and write the .thumb.jpg sidecar used by list pages.
-        await using (var read = file.OpenReadStream())
+        // Store the image as-is (masuit-style: the browser scales it via CSS + lazy loading).
+        await using (var target = System.IO.File.Create(absolute))
         {
-            await ImagePipeline.SaveAsync(read, ext, absolute);
+            await file.CopyToAsync(target);
         }
 
         // { url } — mapped to Vditor's response shape by the editor's format() hook.

@@ -82,21 +82,6 @@ public class ContentService
         return string.IsNullOrWhiteSpace(text) ? "post" : text;
     }
 
-    /// <summary>Plain-text excerpt used as the default summary / meta description.</summary>
-    public string Excerpt(string markdown, int maxLength = 160)
-    {
-        var text = Regex.Replace(markdown ?? string.Empty, @"```.*?```", " ", RegexOptions.Singleline);
-        text = Regex.Replace(text, @"[#*`>\[\]()!_-]", " ");
-        text = Regex.Replace(text, @"\s+", " ").Trim();
-
-        return text.Length <= maxLength ? text : text[..maxLength].TrimEnd() + "…";
-    }
-
-    public string StripMarkdown(string markdown)
-    {
-        return Excerpt(markdown, int.MaxValue);
-    }
-
     /// <summary>Simple tag list parser: "dotnet, performance, ai" → ["dotnet","performance","ai"].</summary>
     public List<string> ParseTags(string? tagsInput)
     {

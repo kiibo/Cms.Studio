@@ -19,12 +19,12 @@ public class StatsService
         _cache = cache;
     }
 
-    public Task<DashboardStats> GetAsync() =>
-        _cache.GetOrCreateAsync("stats.dashboard", async entry =>
+    public async Task<DashboardStats> GetAsync() =>
+        await _cache.GetOrCreateAsync("stats.dashboard", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheTtl;
             return await LoadAsync();
-        });
+        }) ?? await LoadAsync();
 
     private async Task<DashboardStats> LoadAsync()
     {
@@ -57,12 +57,12 @@ public class StatsService
     /// Per-day unique visitors for the dashboard curve.
     /// Rule: the same IP visiting several times on the same day counts once.
     /// </summary>
-    public Task<List<DailyVisits>> GetDailyUniqueVisitorsAsync(int days) =>
-        _cache.GetOrCreateAsync($"stats.uv:{days}", async entry =>
+    public async Task<List<DailyVisits>> GetDailyUniqueVisitorsAsync(int days) =>
+        await _cache.GetOrCreateAsync($"stats.uv:{days}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheTtl;
             return await LoadDailyUniqueVisitorsAsync(days);
-        });
+        }) ?? await LoadDailyUniqueVisitorsAsync(days);
 
     private async Task<List<DailyVisits>> LoadDailyUniqueVisitorsAsync(int days)
     {
@@ -83,12 +83,12 @@ public class StatsService
     }
 
     /// <summary>Aggregate visitor stats for a window: PV, UV, device/browser/platform split, top IPs.</summary>
-    public Task<VisitorStats> GetVisitorStatsAsync(int days) =>
-        _cache.GetOrCreateAsync($"stats.visitors:{days}", async entry =>
+    public async Task<VisitorStats> GetVisitorStatsAsync(int days) =>
+        await _cache.GetOrCreateAsync($"stats.visitors:{days}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheTtl;
             return await LoadVisitorStatsAsync(days);
-        });
+        }) ?? await LoadVisitorStatsAsync(days);
 
     private async Task<VisitorStats> LoadVisitorStatsAsync(int days)
     {

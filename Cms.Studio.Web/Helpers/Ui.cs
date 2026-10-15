@@ -33,23 +33,6 @@ public static class Ui
     private static readonly Regex HtmlImage = new(@"<img[^>]+src=[""'](?<url>[^""']+)[""']", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>
-    /// Small thumbnail for list cards. Local uploads have a generated <c>.thumb.jpg</c> sidecar;
-    /// external covers (and AVIF) fall back to the original URL.
-    /// </summary>
-    public static string? ThumbUrl(string? cover)
-    {
-        if (string.IsNullOrWhiteSpace(cover))
-            return null;
-        if (!cover.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
-            return cover;
-
-        var ext = Path.GetExtension(cover);
-        if (ext.Length == 0 || ext.Equals(".avif", StringComparison.OrdinalIgnoreCase))
-            return cover;
-        return cover[..^ext.Length] + ".thumb.jpg";
-    }
-
-    /// <summary>
     /// Cover image for cards / hero / og:image. Explicit CoverImageUrl wins,
     /// otherwise the first image found in the Markdown body (Masuit.MyBlogs style) is used.
     /// </summary>

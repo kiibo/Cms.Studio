@@ -50,7 +50,6 @@ builder.Services.AddMemoryCache();
 // ---------- visit analytics queue (page responses never wait on the log INSERT) ----------
 builder.Services.AddSingleton<VisitQueue>();
 builder.Services.AddHostedService<VisitWriterService>();
-builder.Services.AddHostedService<UploadThumbnailBackfillService>();
 
 // ---------- multi-database (nopCommerce-style provider selection) ----------
 var dataProvider = builder.Configuration.GetSection("DataProvider").Get<DataProviderSettings>() ?? new DataProviderSettings();

@@ -27,7 +27,7 @@
                 @foreach (var p in side)
                 {
                     <a class="hero-card" href="/blog/@p.Slug">
-                        <img src="@Ui.ThumbUrl(Ui.CoverUrl(p))" alt="" loading="lazy" decoding="async" />
+                        <img src="@Ui.CoverUrl(p)" alt="" loading="lazy" decoding="async" />
                         <div class="hero-mask">
                             <h3>@p.Title</h3>
                         </div>

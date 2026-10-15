@@ -61,10 +61,9 @@ Comment moderation: admin console → Comments (Pending / All, Approve / Delete)
 
 ## Performance
 
-- **Thumbnails** (masuit-style lazy list images): list cards / hero side cards load a generated
-  480 px `<name>.thumb.jpg` sidecar with `loading="lazy" decoding="async"`; post detail pages keep
-  the original image. Uploads are downscaled to ≤1920 px on save; missing sidecars for older
-  uploads are generated once at startup.
+- **List images** (masuit-style): list cards and hero side cards reuse the post cover / first image
+  with `loading="lazy" decoding="async"` — nothing below the fold is fetched, and the browser
+  scales the image via CSS. Post detail pages load the original images.
 - **Query caching** (masuit `.Cacheable()`-style): every public listing page (feed / category / tag /
   series / archive / search) is cached per page for 60 s — clicking "next page" is instant — and
   any post/feedback change evicts the cache immediately. Header nav + latest post are cached 2 min,

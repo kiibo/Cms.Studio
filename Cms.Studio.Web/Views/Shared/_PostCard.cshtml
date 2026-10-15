@@ -38,7 +38,7 @@
     @if (cover != null)
     {
         <a class="feed-thumb" href="/blog/@Model.Slug" aria-hidden="true" tabindex="-1">
-            <img src="@Ui.ThumbUrl(cover)" alt="" width="352" height="232" loading="lazy" decoding="async" />
+            <img src="@cover" alt="" loading="lazy" decoding="async" />
         </a>
     }
 </article>

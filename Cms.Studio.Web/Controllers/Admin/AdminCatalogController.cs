@@ -220,8 +220,9 @@ public class AdminSettingsController : Controller
             Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
 
             await using (var read = logo.OpenReadStream())
+            await using (var target = System.IO.File.Create(absolute))
             {
-                await ImagePipeline.SaveAsync(read, ext, absolute);
+                await read.CopyToAsync(target);
             }
 
             await DeleteLogoFileAsync(await _settings.GetSiteLogoAsync(), env);
