@@ -1,0 +1,283 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TechBeggar Article Publishing API",
+    "version": "1.0.0",
+    "description": "Token-authenticated API for AI agents / automations to publish articles to the TechBeggar blog (https://techbeggar.com). Auth: send the API token as `Authorization: Bearer <token…n## Workflow\n1. (optional) `GET /api/catalog` to discover category / tag / series ids and names.\n2. (optional) upload images first via `POST /api/images` (multipart) or `POST /api/images/base64`, and paste the returned `markdown` into `contentMd`.\n3. `POST /api/posts` with the article. `status` defaults to `published` — no manual approval needed.\n4. The response contains the final `slug` and public `url`.\n\n## Notes\n- `categoryName` auto-creates a category when it does not exist; `tags` are created automatically.\n- Omitted optional fields get sensible defaults (slug generated from title, summary derived from the body).\n- Rate limit: 60 requests/minute. Errors return JSON `{\"error\": \"…\"}` with 400/401/404.",
+    "contact": { "name": "TechBeggar admin (Settings → API access)" }
+  },
+  "servers": [
+    { "url": "https://techbeggar.com", "description": "Production" }
+  ],
+  "security": [
+    { "bearerAuth": [] },
+    { "apiKeyAuth": [] }
+  ],
+  "paths": {
+    "/api/catalog": {
+      "get": {
+        "summary": "Discover categories, tags and series",
+        "description": "Returns id/name/slug for every category, tag and series so an agent can pick valid values before posting.",
+        "operationId": "getCatalog",
+        "responses": {
+          "200": {
+            "description": "Catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categories": { "type": "array", "items": { "$ref": "#/components/schemas/CatalogItem" } },
+                    "tags": { "type": "array", "items": { "$ref": "#/components/schemas/CatalogItem" } },
+                    "series": { "type": "array", "items": { "$ref": "#/components/schemas/CatalogItem" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/posts": {
+      "get": {
+        "summary": "List articles",
+        "operationId": "listPosts",
+        "parameters": [
+          { "name": "keyword", "in": "query", "schema": { "type": "string" }, "description": "Title keyword filter" },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "published"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 50 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalCount": { "type": "integer" },
+                    "page": { "type": "integer" },
+                    "pageSize": { "type": "integer" },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "title": { "type": "string" },
+                          "slug": { "type": "string" },
+                          "status": { "type": "string" },
+                          "url": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create an article (publishes immediately by default)",
+        "operationId": "createPost",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PostInput" },
+              "example": {
+                "title": "RedMagic 12 Pro+ Is Here: A Real Full Screen and Liquid Cooling",
+                "contentMd": "# Intro\n\nMarkdown body…\n\n![cover](/uploads/2026/10/abc.jpg)",
+                "summary": "One-line summary shown on cards.",
+                "categoryName": "Smartphones",
+                "tags": ["redmagic", "gaming phones"],
+                "status": "published"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created — includes final slug and public URL",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostResult" } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/posts/{idOrSlug}": {
+      "get": {
+        "summary": "Fetch one article (id or slug), including its Markdown body",
+        "operationId": "getPost",
+        "parameters": [{ "name": "idOrSlug", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "The article", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostResult" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/posts/{id}": {
+      "put": {
+        "summary": "Update an article (partial — omitted fields keep their values)",
+        "operationId": "updatePost",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PostInput" },
+              "example": { "title": "New title", "status": "draft" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/images": {
+      "post": {
+        "summary": "Upload an image for article bodies (multipart)",
+        "operationId": "uploadImage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": { "file": { "type": "string", "format": "binary", "description": "jpg/jpeg/png/gif/webp/avif/bmp, max 10 MB" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stored — paste `markdown` into contentMd",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImageResult" } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/images/base64": {
+      "post": {
+        "summary": "Upload an image from base64 bytes (for generated charts, screenshots)",
+        "operationId": "uploadImageBase64",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fileName", "dataBase64"],
+                "properties": {
+                  "fileName": { "type": "string", "description": "Must carry the real image type, e.g. chart.png" },
+                  "dataBase64": { "type": "string", "description": "Base64-encoded image bytes" }
+                }
+              },
+              "example": { "fileName": "chart.png", "dataBase64": "iVBORw0KGgo…" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Stored", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImageResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "description": "Authorization: Bearer *** (admin Settings → API access)" },
+      "apiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-Api-Key", "description": "Same token as the Bearer scheme." }
+    },
+    "schemas": {
+      "CatalogItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" }
+        }
+      },
+      "PostInput": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 200, "description": "Required when creating." },
+          "slug": { "type": "string", "description": "Optional — generated from the title." },
+          "summary": { "type": "string", "description": "Optional — derived from the body when omitted." },
+          "contentMd": { "type": "string", "description": "Markdown body. Required when creating. Max 200,000 chars." },
+          "status": { "type": "string", "enum": ["published", "draft"], "default": "published" },
+          "categoryId": { "type": "integer", "description": "Existing category id (see /api/catalog)." },
+          "categoryName": { "type": "string", "description": "Category by name — auto-created when new. Provide this or categoryId." },
+          "tags": { "type": "array", "items": { "type": "string" }, "description": "Tag names, auto-created when new. On update: omit to keep, [] to clear." },
+          "seriesIds": { "type": "array", "items": { "type": "integer" }, "description": "Existing series ids. On update: omit to keep, [] to clear." },
+          "coverImageUrl": { "type": "string" },
+          "authorName": { "type": "string" },
+          "metaTitle": { "type": "string" },
+          "metaDescription": { "type": "string" },
+          "isFixedTop": { "type": "boolean", "default": false },
+          "publishedOnUtc": { "type": "string", "format": "date-time", "description": "ISO-8601. Defaults to now when publishing." }
+        }
+      },
+      "PostResult": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "status": { "type": "string" },
+          "url": { "type": "string", "description": "Public URL of the article." },
+          "summary": { "type": "string" },
+          "contentMd": { "type": "string", "nullable": true },
+          "coverImageUrl": { "type": "string", "nullable": true },
+          "authorName": { "type": "string" },
+          "category": { "$ref": "#/components/schemas/CatalogItem" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "isFixedTop": { "type": "boolean" },
+          "metaTitle": { "type": "string", "nullable": true },
+          "metaDescription": { "type": "string", "nullable": true },
+          "publishedOnUtc": { "type": "string", "format": "date-time", "nullable": true },
+          "createdOnUtc": { "type": "string", "format": "date-time" },
+          "modifiedOnUtc": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "ImageResult": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Site-relative URL, e.g. /uploads/2026/10/abc.jpg" },
+          "absoluteUrl": { "type": "string" },
+          "markdown": { "type": "string", "description": "Ready-to-paste snippet: ![name](/uploads/…)" },
+          "html": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Validation error",
+        "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API token",
+        "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } }
+      },
+      "NotFound": {
+        "description": "Post not found",
+        "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } }
+      }
+    }
+  }
+}
