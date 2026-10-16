@@ -141,6 +141,10 @@
 
         try {
             const vditor = new Vditor('vditor-editor', {
+                // All Vditor sub-assets (themes, i18n, emoji) load from jsdelivr too — the
+                // default base is unpkg.com, which is blocked by the CSP and unreachable
+                // from mainland China. Everything stays on the CDN (no server load).
+                cdn: 'https://cdn.jsdelivr.net/npm/vditor@3.8.15',
                 lang: 'en_US',
                 mode: 'ir',
                 height: Math.max(560, window.innerHeight - 300),

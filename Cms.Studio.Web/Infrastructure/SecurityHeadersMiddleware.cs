@@ -10,8 +10,9 @@ namespace Cms.Studio.Web.Infrastructure;
 public class SecurityHeadersMiddleware
 {
     /// <summary>
-    /// Conservative default. Override per deployment with <c>Security:ContentSecurityPolicy</c>
-    /// (set it to <c>off</c> to disable the CSP entirely).
+    /// Conservative default. The admin editor (Vditor) loads from cdn.jsdelivr.net — all of its
+    /// sub-assets are pinned to the same origin via its <c>cdn</c> option. Override per deployment
+    /// with <c>Security:ContentSecurityPolicy</c> (set it to <c>off</c> to disable the CSP entirely).
     /// </summary>
     public const string DefaultContentSecurityPolicy =
         "default-src 'self'; " +
