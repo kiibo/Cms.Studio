@@ -1,0 +1,280 @@
+/* ==========================================================================
+   tpl-huashu.css — 花叔 article 主题（文章显示模板）
+   Adapted from huashu-md-html (MIT) — https://github.com/alchaincyf/huashu-md-html
+   Editorial magazine style: Tufte CSS × Penguin Books × The New Yorker
+   Signatures: serif body · terracotta accent · drop cap · § section numbers
+   Scoped under .tpl-huashu so the classic site style stays untouched.
+   Font stacks are system-only (no webfont CDN — fast in mainland China).
+   ========================================================================== */
+
+.tpl-huashu {
+  /* Type families (system stacks — huashu design tokens, no external fonts) */
+  --hs-font-display: "Newsreader", "Source Han Serif SC", "Songti SC", "Iowan Old Style", Georgia, serif;
+  --hs-font-body: "Newsreader", "Source Han Serif SC", "Songti SC", "Iowan Old Style", Georgia, serif;
+  --hs-font-meta: "IBM Plex Sans", "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --hs-font-mono: "JetBrains Mono", "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+
+  /* Color — Penguin Books × Anthropic restraint (huashu article palette) */
+  --hs-ink: #1a1612;
+  --hs-ink-2: #4a4338;
+  --hs-ink-3: #7a7062;
+  --hs-rule: #d9d2c0;
+  --hs-paper: #fbf7ee;
+  --hs-paper-2: #f3ecd9;
+  --hs-accent: #b04a1a;
+  --hs-link: #8a3911;
+  --hs-link-h: #5e2509;
+  --hs-code-bg: #2a2622;
+  --hs-code-ink: #e9e2d0;
+  --hs-rhythm: 1.2em;
+
+  font-family: var(--hs-font-body);
+  font-size: 17.5px;
+  line-height: 1.78;
+  color: var(--hs-ink);
+  background: var(--hs-paper);
+  border: 1px solid var(--hs-rule);
+  border-radius: 12px;
+  padding: 42px clamp(20px, 5vw, 56px);
+  margin: 22px 0;
+  font-feature-settings: "kern", "liga", "calt";
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tpl-huashu {
+    --hs-ink: #ece4d2;
+    --hs-ink-2: #c0b89f;
+    --hs-ink-3: #88806b;
+    --hs-rule: #3a3326;
+    --hs-paper: #1a1610;
+    --hs-paper-2: #221d14;
+    --hs-accent: #e08560;
+    --hs-link: #e09060;
+    --hs-link-h: #f0b18b;
+    --hs-code-bg: #0e0c08;
+    --hs-code-ink: #ece4d2;
+  }
+}
+
+/* ---------- headings (§ section numbers · hairline rule) ---------- */
+
+.tpl-huashu { counter-reset: hs-h2; }
+
+.tpl-huashu h1, .tpl-huashu h2, .tpl-huashu h3,
+.tpl-huashu h4, .tpl-huashu h5, .tpl-huashu h6 {
+  font-family: var(--hs-font-display);
+  font-weight: 600;
+  line-height: 1.22;
+  color: var(--hs-ink);
+  letter-spacing: -0.008em;
+  text-wrap: balance;
+  border: none;
+  padding-left: 0;
+}
+.tpl-huashu h1 { font-size: 2rem; margin: 0 0 0.6em; }
+.tpl-huashu h2 {
+  counter-increment: hs-h2;
+  font-size: 1.65rem;
+  margin: 2.6em 0 0.7em;
+  padding-top: 1.2em;
+  position: relative;
+}
+.tpl-huashu h2::before {
+  content: "§" counter(hs-h2);
+  display: block;
+  font-family: var(--hs-font-meta);
+  font-weight: 500;
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+  color: var(--hs-accent);
+  margin-bottom: 0.4em;
+  font-feature-settings: "tnum";
+}
+.tpl-huashu h2::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 1px;
+  background: var(--hs-rule);
+}
+.tpl-huashu h2:first-child { padding-top: 0; }
+.tpl-huashu h2:first-child::after { display: none; }
+.tpl-huashu h3 { font-size: 1.3rem; margin: 2em 0 0.5em; }
+.tpl-huashu h4 { font-size: 1.1rem; font-style: italic; font-weight: 500; margin: 1.6em 0 0.4em; }
+.tpl-huashu h5 {
+  font-family: var(--hs-font-meta);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--hs-ink-2);
+  margin: 1.6em 0 0.4em;
+}
+.tpl-huashu h6 { font-size: 0.85rem; color: var(--hs-ink-3); font-weight: 500; }
+
+/* ---------- paragraphs (drop cap · lead paragraph) ---------- */
+
+.tpl-huashu p { margin: 0 0 var(--hs-rhythm); orphans: 3; widows: 3; }
+
+.tpl-huashu > p:first-of-type::first-letter {
+  font-family: var(--hs-font-display);
+  font-weight: 700;
+  float: left;
+  font-size: 4.2em;
+  line-height: 0.85;
+  margin: 0.05em 0.12em 0 -0.04em;
+  color: var(--hs-accent);
+  font-feature-settings: "lnum";
+}
+.tpl-huashu > p:first-of-type { font-size: 1.08em; line-height: 1.65; }
+
+/* ---------- inline elements ---------- */
+
+.tpl-huashu strong, .tpl-huashu b {
+  font-weight: 700;
+  color: var(--hs-ink);
+  background: linear-gradient(to bottom, transparent 65%, rgba(176, 74, 26, 0.12) 65%);
+}
+.tpl-huashu em, .tpl-huashu i { font-style: italic; }
+
+.tpl-huashu a {
+  color: var(--hs-link);
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: rgba(138, 57, 17, 0.4);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.tpl-huashu a:hover { color: var(--hs-link-h); text-decoration-color: var(--hs-link-h); }
+
+/* ---------- blockquote (pull-quote style) ---------- */
+
+.tpl-huashu blockquote {
+  margin: 2em 0;
+  padding: 0 1.2em;
+  border-left: 3px solid var(--hs-accent);
+  font-style: italic;
+  color: var(--hs-ink-2);
+  background: transparent;
+}
+.tpl-huashu blockquote p:last-child { margin-bottom: 0; }
+
+/* ---------- lists (em-dash bullets in accent) ---------- */
+
+.tpl-huashu ul, .tpl-huashu ol { padding-left: 1.4em; margin: 0 0 var(--hs-rhythm); }
+.tpl-huashu ul { list-style: none; }
+.tpl-huashu ul > li { position: relative; padding-left: 0.2em; }
+.tpl-huashu ul > li::before {
+  content: "—";
+  position: absolute;
+  left: -1.2em;
+  color: var(--hs-accent);
+  font-weight: 600;
+}
+.tpl-huashu ol li::marker {
+  color: var(--hs-accent);
+  font-variant-numeric: oldstyle-nums;
+  font-weight: 500;
+}
+.tpl-huashu li { margin: 0.35em 0; }
+
+/* ---------- code ---------- */
+
+.tpl-huashu code, .tpl-huashu kbd, .tpl-huashu samp {
+  font-family: var(--hs-font-mono);
+  font-size: 0.84em;
+}
+.tpl-huashu :not(pre) > code {
+  background: rgba(176, 74, 26, 0.08);
+  color: var(--hs-ink);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+  border: 1px solid rgba(176, 74, 26, 0.22);
+  white-space: nowrap;
+}
+.tpl-huashu pre {
+  margin: 1.6em 0;
+  padding: 1.1em 1.3em;
+  background: var(--hs-code-bg);
+  color: var(--hs-code-ink);
+  border: none;
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.6;
+  font-size: 0.88rem;
+}
+.tpl-huashu pre code {
+  background: transparent;
+  color: inherit;
+  border: none;
+  padding: 0;
+  white-space: pre;
+}
+
+/* ---------- tables (publishing house rules) ---------- */
+
+.tpl-huashu table {
+  width: 100%;
+  margin: 1.8em 0;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  font-variant-numeric: tabular-nums;
+}
+.tpl-huashu thead { border-top: 2px solid var(--hs-ink); border-bottom: 1px solid var(--hs-ink); }
+.tpl-huashu tbody tr { border-bottom: 1px solid var(--hs-rule); }
+.tpl-huashu tbody tr:last-child { border-bottom: 2px solid var(--hs-ink); }
+.tpl-huashu th, .tpl-huashu td { text-align: left; padding: 0.7em 0.9em; vertical-align: top; }
+.tpl-huashu th {
+  background: transparent;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--hs-font-meta);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  color: var(--hs-ink);
+}
+
+/* ---------- figures & images ---------- */
+
+.tpl-huashu figure, .tpl-huashu .content-figure { margin: 2em auto; max-width: 920px; padding: 0; }
+.tpl-huashu figure img,
+.tpl-huashu .content-figure img,
+.tpl-huashu p > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(26, 22, 18, 0.08);
+}
+.tpl-huashu figcaption {
+  margin-top: 0.8em;
+  font-size: 0.85em;
+  font-family: var(--hs-font-meta);
+  font-style: italic;
+  text-align: center;
+  color: var(--hs-ink-3);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* ---------- horizontal rule (signature: 30% width) ---------- */
+
+.tpl-huashu hr {
+  border: none;
+  height: 1px;
+  background: var(--hs-rule);
+  margin: 3em 0;
+  width: 30%;
+}
+
+::selection { background: rgba(176, 74, 26, 0.28); }
+
+@media (max-width: 600px) {
+  .tpl-huashu { font-size: 16.5px; padding: 28px 18px; }
+}

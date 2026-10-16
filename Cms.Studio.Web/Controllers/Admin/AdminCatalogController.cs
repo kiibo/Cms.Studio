@@ -119,6 +119,7 @@ public class AdminSettingsController : Controller
         ViewBag.PostsPerPage = await _settings.GetAsync(SettingService.PostsPerPageKey, "10");
         ViewBag.AuthorName = await _settings.GetAuthorNameAsync();
         ViewBag.ArticleStyle = await _settings.GetArticleStyleAsync();
+        ViewBag.ArticleTemplate = await _settings.GetArticleTemplateAsync();
         ViewBag.BrandText = await _settings.GetSiteBrandTextAsync();
         ViewBag.SiteLogo = await _settings.GetSiteLogoAsync();
         ViewBag.ApiToken = await _apiTokens.GetOrCreateAsync();
@@ -129,7 +130,7 @@ public class AdminSettingsController : Controller
     [HttpPost("")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(string siteTitle, string siteDescription, string siteBaseUrl,
-        string postsPerPage, string authorName, string? articleStyle)
+        string postsPerPage, string authorName, string? articleStyle, string? articleTemplate)
     {
         await _settings.SetAsync(SettingService.SiteTitleKey, siteTitle ?? string.Empty);
         await _settings.SetAsync(SettingService.SiteDescriptionKey, siteDescription ?? string.Empty);
@@ -138,6 +139,8 @@ public class AdminSettingsController : Controller
         await _settings.SetAsync(SettingService.AuthorNameKey, authorName ?? string.Empty);
         await _settings.SetAsync(SettingService.ArticleStyleKey,
             articleStyle is "comfy" or "paper" or "large" ? articleStyle : "default");
+        await _settings.SetAsync(SettingService.ArticleTemplateKey,
+            articleTemplate == "huashu" ? "huashu" : "classic");
         TempData["Saved"] = true;
         return RedirectToAction("Index");
     }

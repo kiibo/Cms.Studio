@@ -15,6 +15,7 @@ public class SettingService
     public const string SiteLogoKey = "SiteLogo";
     public const string SiteBrandTextKey = "SiteBrandText";
     public const string ArticleStyleKey = "ArticleStyle";
+    public const string ArticleTemplateKey = "ArticleTemplate";
 
     private readonly CmsDbContext _db;
     private static readonly Dictionary<string, string> Cache = new();
@@ -74,11 +75,18 @@ public class SettingService
         return string.IsNullOrWhiteSpace(value) ? "Cms.Studio" : value.Trim();
     }
 
-    /// <summary>Article reading style preset: default | comfy | paper | large.</summary>
+    /// <summary>Article reading style preset: default | comfy | paper | large (classic template only).</summary>
     public async Task<string> GetArticleStyleAsync()
     {
         var value = await GetAsync(ArticleStyleKey, "default");
         return value is "comfy" or "paper" or "large" ? value : "default";
+    }
+
+    /// <summary>Article display template: classic (original site style) | huashu (花叔 editorial).</summary>
+    public async Task<string> GetArticleTemplateAsync()
+    {
+        var value = await GetAsync(ArticleTemplateKey, "classic");
+        return value == "huashu" ? "huashu" : "classic";
     }
 
     public async Task<int> GetPostsPerPageAsync()

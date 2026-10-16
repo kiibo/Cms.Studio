@@ -37,7 +37,13 @@
         <label>Default author name
             <input type="text" name="authorName" value="@ViewBag.AuthorName" />
         </label>
-        <label>Article reading style
+        <label>Article display template
+            <select name="articleTemplate">
+                <option value="classic" selected="@(ViewBag.ArticleTemplate == "classic" ? "selected" : null)">Classic — original site style (with reading presets below)</option>
+                <option value="huashu" selected="@(ViewBag.ArticleTemplate == "huashu" ? "selected" : null)">Huashu — editorial magazine style (serif, drop cap, § sections)</option>
+            </select>
+        </label>
+        <label>Article reading style (Classic template only)
             <select name="articleStyle">
                 @foreach (var opt in new[] { ("default", "Default — current site typography"), ("comfy", "Comfy — serif, airy line height for long reads"), ("paper", "Paper — warm sepia page, easy on the eyes"), ("large", "Large — extra-big type for relaxed reading") })
                 {
