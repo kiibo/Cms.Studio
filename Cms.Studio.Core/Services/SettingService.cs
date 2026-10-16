@@ -14,6 +14,7 @@ public class SettingService
     public const string AuthorNameKey = "AuthorName";
     public const string SiteLogoKey = "SiteLogo";
     public const string SiteBrandTextKey = "SiteBrandText";
+    public const string ArticleStyleKey = "ArticleStyle";
 
     private readonly CmsDbContext _db;
     private static readonly Dictionary<string, string> Cache = new();
@@ -71,6 +72,13 @@ public class SettingService
     {
         var value = await GetAsync(SiteBrandTextKey, "Cms.Studio");
         return string.IsNullOrWhiteSpace(value) ? "Cms.Studio" : value.Trim();
+    }
+
+    /// <summary>Article reading style preset: default | comfy | paper | large.</summary>
+    public async Task<string> GetArticleStyleAsync()
+    {
+        var value = await GetAsync(ArticleStyleKey, "default");
+        return value is "comfy" or "paper" or "large" ? value : "default";
     }
 
     public async Task<int> GetPostsPerPageAsync()

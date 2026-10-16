@@ -37,6 +37,14 @@
         <label>Default author name
             <input type="text" name="authorName" value="@ViewBag.AuthorName" />
         </label>
+        <label>Article reading style
+            <select name="articleStyle">
+                @foreach (var opt in new[] { ("default", "Default — current site typography"), ("comfy", "Comfy — serif, airy line height for long reads"), ("paper", "Paper — warm sepia page, easy on the eyes"), ("large", "Large — extra-big type for relaxed reading") })
+                {
+                    <option value="@opt.Item1" selected="@(ViewBag.ArticleStyle == opt.Item1 ? "selected" : null)">@opt.Item2</option>
+                }
+            </select>
+        </label>
         <button type="submit" class="btn">Save</button>
     </form>
 </div>

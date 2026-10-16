@@ -118,6 +118,7 @@ public class AdminSettingsController : Controller
         ViewBag.SiteBaseUrl = await _settings.GetBaseUrlAsync();
         ViewBag.PostsPerPage = await _settings.GetAsync(SettingService.PostsPerPageKey, "10");
         ViewBag.AuthorName = await _settings.GetAuthorNameAsync();
+        ViewBag.ArticleStyle = await _settings.GetArticleStyleAsync();
         ViewBag.BrandText = await _settings.GetSiteBrandTextAsync();
         ViewBag.SiteLogo = await _settings.GetSiteLogoAsync();
         ViewBag.ApiToken = await _apiTokens.GetOrCreateAsync();
@@ -128,13 +129,15 @@ public class AdminSettingsController : Controller
     [HttpPost("")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(string siteTitle, string siteDescription, string siteBaseUrl,
-        string postsPerPage, string authorName)
+        string postsPerPage, string authorName, string? articleStyle)
     {
         await _settings.SetAsync(SettingService.SiteTitleKey, siteTitle ?? string.Empty);
         await _settings.SetAsync(SettingService.SiteDescriptionKey, siteDescription ?? string.Empty);
         await _settings.SetAsync(SettingService.SiteBaseUrlKey, (siteBaseUrl ?? string.Empty).Trim().TrimEnd('/'));
         await _settings.SetAsync(SettingService.PostsPerPageKey, postsPerPage ?? "10");
         await _settings.SetAsync(SettingService.AuthorNameKey, authorName ?? string.Empty);
+        await _settings.SetAsync(SettingService.ArticleStyleKey,
+            articleStyle is "comfy" or "paper" or "large" ? articleStyle : "default");
         TempData["Saved"] = true;
         return RedirectToAction("Index");
     }

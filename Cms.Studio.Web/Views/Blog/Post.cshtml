@@ -2,6 +2,7 @@
 @{
     var published = Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc;
     var updated = Model.Post.ModifiedOnUtc ?? Model.Post.PublishedOnUtc ?? Model.Post.CreatedOnUtc;
+    var readingStyle = await SiteSettings.GetArticleStyleAsync();
     ViewData["Toc"] = Model.Toc; // rendered by the layout in the sidebar (above Rankings)
 }
 
@@ -34,7 +35,7 @@
         <img class="post-cover" src="@Model.Post.CoverImageUrl" alt="@Model.Post.Title" />
     }
 
-    <div class="post-body">
+    <div class="post-body reader-@readingStyle">
         @Html.Raw(Model.HtmlContent)
     </div>
 
